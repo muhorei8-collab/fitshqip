@@ -30,6 +30,17 @@ export function AdminScreen() {
       }))
   }, [allSessions, users])
 
+  if (!currentUser?.isAdmin) {
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-2 px-6 text-center">
+        <p className="text-lg font-bold">Qasje e refuzuar</p>
+        <p className="text-sm text-muted-foreground">
+          Ky panel është vetëm për administratën e FITSHQIP.
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-dvh pb-28">
       <ScreenHeader title="Paneli i Administratës" subtitle="FITSHQIP Headquarters" />

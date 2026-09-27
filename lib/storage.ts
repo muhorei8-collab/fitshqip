@@ -1,66 +1,8 @@
-import type {
-  BodyMetric,
-  Goals,
-  PersonalRecord,
-  Routine,
-  User,
-  WorkoutSession,
-} from './types'
+import type { PersonalRecord, WorkoutSession } from './types'
 
-const KEYS = {
-  users: 'fitshqip_users',
-  current: 'fitshqip_current_user_id',
-  sessions: 'fitshqip_sessions',
-  routines: 'fitshqip_routines',
-  metrics: 'fitshqip_body_metrics',
-  goals: 'fitshqip_goals',
-  seeded: 'fitshqip_seeded_v1',
-}
-
-function read<T>(key: string, fallback: T): T {
-  if (typeof window === 'undefined') return fallback
-  try {
-    const raw = window.localStorage.getItem(key)
-    return raw ? (JSON.parse(raw) as T) : fallback
-  } catch {
-    return fallback
-  }
-}
-
-function write<T>(key: string, value: T) {
-  if (typeof window === 'undefined') return
-  window.localStorage.setItem(key, JSON.stringify(value))
-}
-
-export const store = {
-  getUsers: () => read<User[]>(KEYS.users, []),
-  setUsers: (u: User[]) => write(KEYS.users, u),
-
-  getCurrentUserId: () => read<string | null>(KEYS.current, null),
-  setCurrentUserId: (id: string | null) => write(KEYS.current, id),
-
-  getSessions: () => read<WorkoutSession[]>(KEYS.sessions, []),
-  setSessions: (s: WorkoutSession[]) => write(KEYS.sessions, s),
-
-  getRoutines: () => read<Routine[]>(KEYS.routines, []),
-  setRoutines: (r: Routine[]) => write(KEYS.routines, r),
-
-  getMetrics: () => read<BodyMetric[]>(KEYS.metrics, []),
-  setMetrics: (m: BodyMetric[]) => write(KEYS.metrics, m),
-
-  getGoals: () => read<Goals[]>(KEYS.goals, []),
-  setGoals: (g: Goals[]) => write(KEYS.goals, g),
-
-  isSeeded: () => read<boolean>(KEYS.seeded, false),
-  setSeeded: () => write(KEYS.seeded, true),
-
-  resetUserData: (userId: string) => {
-    store.setSessions(store.getSessions().filter((s) => s.userId !== userId))
-    store.setMetrics(store.getMetrics().filter((m) => m.userId !== userId))
-    store.setRoutines(store.getRoutines().filter((r) => r.ownerId !== userId))
-    store.setGoals(store.getGoals().filter((g) => g.userId !== userId))
-  },
-}
+// Stateless helpers only. All persistence now lives in Supabase
+// (see components/app-provider.tsx and lib/supabase/); nothing here
+// touches localStorage anymore.
 
 export function uid(prefix = 'id'): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`

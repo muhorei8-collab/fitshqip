@@ -20,7 +20,7 @@ import { displayWeight } from '@/lib/format'
 const LEVELS: Level[] = ['Fillestar', 'Mesatar', 'Avancuar']
 
 export function ProfileTab() {
-  const { currentUser, updateProfile, toggleAdmin, resetData, logOut, showToast } = useApp()
+  const { currentUser, updateProfile, resetData, logOut, showToast } = useApp()
   const { openScreen } = useNav()
   const [editOpen, setEditOpen] = useState(false)
   const [resetOpen, setResetOpen] = useState(false)
@@ -34,12 +34,12 @@ export function ProfileTab() {
   if (!currentUser) return null
   const unit = currentUser.unit
 
-  function saveProfile() {
+  async function saveProfile() {
     if (!name.trim()) {
       showToast('Emri nuk mund të jetë bosh.', 'error')
       return
     }
-    updateProfile({
+    await updateProfile({
       fullName: name.trim(),
       age: Number(age) || currentUser!.age,
       height: Number(height) || currentUser!.height,
@@ -50,8 +50,8 @@ export function ProfileTab() {
     setEditOpen(false)
   }
 
-  function handleReset() {
-    resetData()
+  async function handleReset() {
+    await resetData()
     showToast('Të dhënat u fshinë.', 'info')
     setResetOpen(false)
   }
@@ -154,30 +154,6 @@ export function ProfileTab() {
               ))}
             </div>
           </div>
-
-          {/* Admin toggle */}
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-2 text-sm font-medium">
-              <Shield className="h-4 w-4 text-muted-foreground" />
-              Modaliteti Admin
-            </span>
-            <button
-              type="button"
-              onClick={toggleAdmin}
-              className={`relative h-7 w-12 rounded-full transition-colors ${
-                currentUser.isAdmin ? 'bg-primary' : 'bg-secondary'
-              }`}
-              role="switch"
-              aria-checked={currentUser.isAdmin}
-              aria-label="Ndërro modalitetin admin"
-            >
-              <span
-                className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${
-                  currentUser.isAdmin ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
         </Card>
       </div>
 
@@ -193,8 +169,8 @@ export function ProfileTab() {
         </button>
         <button
           type="button"
-          onClick={() => {
-            logOut()
+          onClick={async () => {
+            await logOut()
             showToast('Dolët nga llogaria.', 'info')
           }}
           className="flex items-center justify-center gap-2 rounded-2xl bg-secondary py-3 font-semibold"

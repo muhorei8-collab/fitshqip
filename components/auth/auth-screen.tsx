@@ -1,17 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { Dumbbell, LogIn, Users } from 'lucide-react'
+import { Dumbbell, LogIn } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
-import { Field, inputClass, Avatar } from '@/components/shared/ui'
+import { Field, inputClass } from '@/components/shared/ui'
 import type { Level } from '@/lib/types'
 
 const LEVELS: Level[] = ['Fillestar', 'Mesatar', 'Avancuar']
 
 export function AuthScreen() {
-  const { signUp, logIn, users, switchUser, showToast } = useApp()
+  const { signUp, logIn, showToast } = useApp()
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   // form fields
   const [fullName, setFullName] = useState('')
@@ -22,30 +23,35 @@ export function AuthScreen() {
   const [weight, setWeight] = useState('')
   const [level, setLevel] = useState<Level>('Fillestar')
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    if (mode === 'login') {
-      const res = logIn(email.trim(), password)
-      if (!res.ok) setError(res.error ?? 'Gabim gjatë hyrjes.')
-      else showToast(`Mirë se erdhe përsëri!`, 'success')
-      return
+    setLoading(true)
+    try {
+      if (mode === 'login') {
+        const res = await logIn(email.trim(), password)
+        if (!res.ok) setError(res.error ?? 'Gabim gjatë hyrjes.')
+        else showToast(`Mirë se erdhe përsëri!`, 'success')
+        return
+      }
+      if (!fullName || !email || !password || !age || !height || !weight) {
+        setError('Ju lutem plotësoni të gjitha fushat.')
+        return
+      }
+      const res = await signUp({
+        fullName: fullName.trim(),
+        email: email.trim(),
+        password,
+        age: Number(age),
+        height: Number(height),
+        weight: Number(weight),
+        level,
+      })
+      if (!res.ok) setError(res.error ?? 'Gabim gjatë regjistrimit.')
+      else showToast('Llogaria u krijua me sukses!', 'success')
+    } finally {
+      setLoading(false)
     }
-    if (!fullName || !email || !password || !age || !height || !weight) {
-      setError('Ju lutem plotësoni të gjitha fushat.')
-      return
-    }
-    const res = signUp({
-      fullName: fullName.trim(),
-      email: email.trim(),
-      password,
-      age: Number(age),
-      height: Number(height),
-      weight: Number(weight),
-      level,
-    })
-    if (!res.ok) setError(res.error ?? 'Gabim gjatë regjistrimit.')
-    else showToast('Llogaria u krijua me sukses!', 'success')
   }
 
   return (
@@ -179,48 +185,13 @@ export function AuthScreen() {
 
         <button
           type="submit"
-          className="mt-1 flex items-center justify-center gap-2 rounded-xl bg-primary py-3.5 font-semibold text-primary-foreground transition-transform active:scale-[0.98]"
+          disabled={loading}
+          className="mt-1 flex items-center justify-center gap-2 rounded-xl bg-primary py-3.5 font-semibold text-primary-foreground transition-transform active:scale-[0.98] disabled:opacity-60"
         >
           <LogIn className="h-5 w-5" />
-          {mode === 'login' ? 'Hyr në llogari' : 'Krijo llogarinë'}
+          {loading ? 'Ju lutem prisni…' : mode === 'login' ? 'Hyr në llogari' : 'Krijo llogarinë'}
         </button>
       </form>
-
-      {mode === 'login' && users.length > 0 && (
-        <div className="mt-8">
-          <div className="mb-3 flex items-center gap-2 text-sm text-muted-foreground">
-            <Users className="h-4 w-4" />
-            <span>Ndërro profil të shpejtë</span>
-          </div>
-          <div className="flex flex-col gap-2">
-            {users.map((u) => (
-              <button
-                key={u.id}
-                type="button"
-                onClick={() => {
-                  switchUser(u.id)
-                  showToast(`Mirë se erdhe, ${u.fullName.split(' ')[0]}!`, 'success')
-                }}
-                className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 text-left transition-colors hover:border-primary/50"
-              >
-                <Avatar name={u.fullName} color={u.avatarColor} />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{u.fullName}</p>
-                  <p className="truncate text-xs text-muted-foreground">{u.email}</p>
-                </div>
-                {u.isAdmin && (
-                  <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                    ADMIN
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-          <p className="mt-4 text-center text-xs text-muted-foreground">
-            Provo shpejt: admin@fitshqip.al / admin123
-          </p>
-        </div>
-      )}
 
       <footer className="mt-auto pt-10 text-center text-[11px] leading-relaxed text-muted-foreground">
         © 2026 FITSHQIP. Të gjitha të drejtat e rezervuara.

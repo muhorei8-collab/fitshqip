@@ -6,7 +6,6 @@ export interface User {
   id: string
   fullName: string
   email: string
-  password: string
   age: number
   height: number // cm
   weight: number // kg

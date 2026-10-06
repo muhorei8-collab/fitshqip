@@ -10,10 +10,12 @@ import { WorkoutTab } from '@/components/tabs/workout-tab'
 import { ProgressTab } from '@/components/tabs/progress-tab'
 import { HistoryTab } from '@/components/tabs/history-tab'
 import { ProfileTab } from '@/components/tabs/profile-tab'
+import { MarketplaceTab } from '@/components/tabs/marketplace-tab'
 import { LibraryScreen } from '@/components/screens/library-screen'
 import { LeaderboardScreen } from '@/components/screens/leaderboard-screen'
 import { MacroScreen } from '@/components/screens/macro-screen'
 import { AdminScreen } from '@/components/screens/admin-screen'
+import { FriendsScreen } from '@/components/screens/friends-screen'
 
 function Router() {
   const { tab, screen } = useNav()
@@ -22,6 +24,7 @@ function Router() {
   if (screen === 'leaderboard') return <LeaderboardScreen />
   if (screen === 'macro') return <MacroScreen />
   if (screen === 'admin') return <AdminScreen />
+  if (screen === 'friends') return <FriendsScreen />
 
   switch (tab) {
     case 'dashboard':
@@ -32,6 +35,8 @@ function Router() {
       return <ProgressTab />
     case 'history':
       return <HistoryTab />
+    case 'marketplace':
+      return <MarketplaceTab />
     case 'profile':
       return <ProfileTab />
     default:

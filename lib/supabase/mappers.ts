@@ -8,6 +8,7 @@ export function mapProfile(row: any): User {
     id: row.id,
     fullName: row.full_name,
     email: row.email,
+    personalId: row.personal_id ?? '',
     age: row.age,
     height: row.height,
     weight: row.weight,

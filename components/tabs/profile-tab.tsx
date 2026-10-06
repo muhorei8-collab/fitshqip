@@ -10,10 +10,12 @@ import {
   Trash2,
   Trophy,
   User as UserIcon,
+  Users,
 } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
 import { useNav } from '@/components/nav'
 import { Avatar, Card, Field, Modal, SectionTitle, inputClass } from '@/components/shared/ui'
+import { PersonalIdCard } from '@/components/shared/personal-id-card'
 import type { Level } from '@/lib/types'
 import { displayWeight } from '@/lib/format'
 
@@ -97,6 +99,8 @@ export function ProfileTab() {
         </Card>
       </div>
 
+      <PersonalIdCard />
+
       <button
         type="button"
         onClick={() => {
@@ -116,6 +120,7 @@ export function ProfileTab() {
       <div>
         <SectionTitle>Mjete</SectionTitle>
         <Card className="flex flex-col divide-y divide-border p-0">
+          <ToolRow icon={Users} label="Palestra me Miqtë" onClick={() => openScreen('friends')} />
           <ToolRow icon={Calculator} label="Kalkulatori i Makros & Kalorive" onClick={() => openScreen('macro')} />
           <ToolRow icon={Trophy} label="Klasifikimi (Leaderboard)" onClick={() => openScreen('leaderboard')} />
           {currentUser.isAdmin && (

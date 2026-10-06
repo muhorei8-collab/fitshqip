@@ -1,4 +1,5 @@
 import type { Exercise, Routine } from './types'
+import { V2_EXERCISES } from './exercises-v2'
 
 export const MUSCLE_GROUPS = [
   'Gjoks',
@@ -219,6 +220,8 @@ export const EXERCISES: Exercise[] = [
     muscle: 'Parakrah',
     instructions: 'Curl me pëllëmbë poshtë për të targetuar pjesën e sipërme të parakrahut.',
   },
+  // FitShqip V2: 200 ushtrime shtesë (20 për secilën kategori), skema e njëjtë.
+  ...V2_EXERCISES,
 ]
 
 export function getExercise(name: string): Exercise | undefined {

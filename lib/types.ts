@@ -6,6 +6,7 @@ export interface User {
   id: string
   fullName: string
   email: string
+  personalId: string // 10-shifra, i lexueshëm vetëm (lock në DB)
   age: number
   height: number // cm
   weight: number // kg

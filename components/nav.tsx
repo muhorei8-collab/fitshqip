@@ -2,8 +2,8 @@
 
 import { createContext, useContext, useState } from 'react'
 
-export type Tab = 'dashboard' | 'workout' | 'progress' | 'history' | 'profile'
-export type Screen = 'library' | 'leaderboard' | 'macro' | 'admin' | null
+export type Tab = 'dashboard' | 'workout' | 'progress' | 'history' | 'marketplace' | 'profile'
+export type Screen = 'library' | 'leaderboard' | 'macro' | 'admin' | 'friends' | null
 
 interface NavState {
   tab: Tab

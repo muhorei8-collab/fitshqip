@@ -1,6 +1,6 @@
 'use client'
 
-import { CalendarDays, Dumbbell, Home, TrendingUp, User } from 'lucide-react'
+import { CalendarDays, Dumbbell, Home, ShoppingBag, TrendingUp, User } from 'lucide-react'
 import { useNav, type Tab } from '@/components/nav'
 import { cn } from '@/lib/utils'
 
@@ -9,6 +9,7 @@ const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: st
   { id: 'workout', label: 'Stërvitja', icon: Dumbbell },
   { id: 'progress', label: 'Progresi', icon: TrendingUp },
   { id: 'history', label: 'Historia', icon: CalendarDays },
+  { id: 'marketplace', label: 'Marketplace', icon: ShoppingBag },
   { id: 'profile', label: 'Profili', icon: User },
 ]
 

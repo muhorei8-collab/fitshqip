@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Dumbbell, LogIn } from 'lucide-react'
+import { Check, Dumbbell, LogIn } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
-import { Field, inputClass } from '@/components/shared/ui'
+import { Field, Modal, inputClass } from '@/components/shared/ui'
+import { TermsContent } from '@/components/auth/terms-content'
 import type { Level } from '@/lib/types'
 
 const LEVELS: Level[] = ['Fillestar', 'Mesatar', 'Avancuar']
@@ -22,6 +23,8 @@ export function AuthScreen() {
   const [height, setHeight] = useState('')
   const [weight, setWeight] = useState('')
   const [level, setLevel] = useState<Level>('Fillestar')
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [termsOpen, setTermsOpen] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -38,6 +41,10 @@ export function AuthScreen() {
         setError('Ju lutem plotësoni të gjitha fushat.')
         return
       }
+      if (!acceptedTerms) {
+        setError('Duhet të pranosh Kushtet dhe të Drejtat e Rezervuara për të vazhduar.')
+        return
+      }
       const res = await signUp({
         fullName: fullName.trim(),
         email: email.trim(),
@@ -46,6 +53,7 @@ export function AuthScreen() {
         height: Number(height),
         weight: Number(weight),
         level,
+        acceptedTerms,
       })
       if (!res.ok) setError(res.error ?? 'Gabim gjatë regjistrimit.')
       else showToast('Llogaria u krijua me sukses!', 'success')
@@ -174,6 +182,33 @@ export function AuthScreen() {
                 ))}
               </div>
             </Field>
+
+            {/* Pranimi i kushteve */}
+            <div className="flex items-start gap-3">
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={acceptedTerms}
+                aria-label="Pranoj Kushtet dhe të Drejtat e Rezervuara"
+                onClick={() => setAcceptedTerms((v) => !v)}
+                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
+                  acceptedTerms ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background'
+                }`}
+              >
+                {acceptedTerms && <Check className="h-3.5 w-3.5" />}
+              </button>
+              <p className="text-xs leading-relaxed text-muted-foreground text-pretty">
+                Pranoj{' '}
+                <button
+                  type="button"
+                  onClick={() => setTermsOpen(true)}
+                  className="font-semibold text-primary underline underline-offset-2"
+                >
+                  Kushtet e Përdorimit dhe të Drejtat e Rezervuara
+                </button>{' '}
+                të FITSHQIP.
+              </p>
+            </div>
           </>
         )}
 
@@ -198,6 +233,20 @@ export function AuthScreen() {
         <br />
         Zhvilluar nga Rei Muho Developments.
       </footer>
+
+      <Modal open={termsOpen} onClose={() => setTermsOpen(false)} title="Kushtet e Përdorimit">
+        <TermsContent />
+        <button
+          type="button"
+          onClick={() => {
+            setAcceptedTerms(true)
+            setTermsOpen(false)
+          }}
+          className="mt-5 w-full rounded-xl bg-primary py-3.5 font-semibold text-primary-foreground"
+        >
+          Pranoj
+        </button>
+      </Modal>
     </div>
   )
 }

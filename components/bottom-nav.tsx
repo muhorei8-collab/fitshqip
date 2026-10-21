@@ -9,7 +9,7 @@ const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: st
   { id: 'workout', label: 'Stërvitja', icon: Dumbbell },
   { id: 'progress', label: 'Progresi', icon: TrendingUp },
   { id: 'history', label: 'Historia', icon: CalendarDays },
-  { id: 'marketplace', label: 'Marketplace', icon: ShoppingBag },
+  { id: 'marketplace', label: 'Dyqani', icon: ShoppingBag },
   { id: 'profile', label: 'Profili', icon: User },
 ]
 

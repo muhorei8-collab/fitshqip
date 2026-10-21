@@ -3,12 +3,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Check, ChevronLeft, Plus, Timer, Trophy, X } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
+import { LiveChallengeBar } from '@/components/screens/challenge-room'
 import { Modal } from '@/components/shared/ui'
 import { RestTimer } from '@/components/workout/rest-timer'
 import type { LoggedExercise, LoggedSet, Routine } from '@/lib/types'
 import { previousBest, sessionVolume } from '@/lib/storage'
 import { feedbackForSet, feedbackForSession } from '@/lib/ai-trainer'
 import { formatDuration, formatVolume } from '@/lib/format'
+import { supabase } from '@/lib/supabase/client'
+import { findMyOpenChallengeId, useChallenge } from '@/lib/supabase/challenges'
 
 interface PRHit {
   exercise: string
@@ -19,6 +22,7 @@ interface PRHit {
 export function ActiveWorkout({ routine, onExit }: { routine: Routine; onExit: () => void }) {
   const { currentUser, sessions, addSession, showToast } = useApp()
   const unit = currentUser?.unit ?? 'kg'
+  const userId = currentUser?.id
 
   const [elapsed, setElapsed] = useState(0)
   const [rest, setRest] = useState(false)
@@ -44,6 +48,65 @@ export function ActiveWorkout({ routine, onExit }: { routine: Routine; onExit: (
     () => exercises.reduce((n, ex) => n + ex.sets.filter((s) => s.completed).length, 0),
     [exercises],
   )
+
+  // ---- Sfida live: nëse jam pjesëmarrës në një sfidë të hapur, seritë e kryera numërohen aty ----
+  const [challengeId, setChallengeId] = useState<string | null>(null)
+  useEffect(() => {
+    if (!userId) return
+    let cancelled = false
+    findMyOpenChallengeId(userId).then((id) => {
+      if (!cancelled) setChallengeId(id)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [userId])
+
+  const liveChallenge = useChallenge(challengeId)
+  const challengeLive = liveChallenge.challenge?.status === 'live'
+
+  // Totalet e kësaj stërvitjeje (vetëm seritë e kryera).
+  const challengeProgress = useMemo(() => {
+    let volume = 0
+    let reps = 0
+    let sets = 0
+    for (const ex of exercises) {
+      for (const s of ex.sets) {
+        if (!s.completed) continue
+        sets += 1
+        reps += s.reps || 0
+        volume += (s.weight || 0) * (s.reps || 0)
+      }
+    }
+    return { volume, reps, sets }
+  }, [exercises])
+
+  // Pikënisja: ç'kisha në sfidë kur filloi ndjekja, pa seritë që ishin kryer më parë këtu.
+  const [challengeBase, setChallengeBase] = useState<{ volume: number; reps: number; sets: number } | null>(null)
+  useEffect(() => {
+    if (!challengeLive || challengeBase || !userId) return
+    const mine = liveChallenge.participants.find((p) => p.userId === userId && p.status === 'joined')
+    if (mine) {
+      setChallengeBase({
+        volume: mine.volume - challengeProgress.volume,
+        reps: mine.reps - challengeProgress.reps,
+        sets: mine.sets - challengeProgress.sets,
+      })
+    }
+  }, [challengeLive, challengeBase, userId, liveChallenge.participants, challengeProgress])
+
+  useEffect(() => {
+    if (!challengeId || !challengeLive || !challengeBase) return
+    const t = setTimeout(() => {
+      supabase.rpc('update_challenge_progress', {
+        p_challenge_id: challengeId,
+        p_volume: Math.max(0, Math.round((challengeBase.volume + challengeProgress.volume) * 100) / 100),
+        p_reps: Math.max(0, Math.round(challengeBase.reps + challengeProgress.reps)),
+        p_sets: Math.max(0, Math.round(challengeBase.sets + challengeProgress.sets)),
+      })
+    }, 400)
+    return () => clearTimeout(t)
+  }, [challengeId, challengeLive, challengeBase, challengeProgress])
 
   function updateSet(exIdx: number, setIdx: number, patch: Partial<LoggedSet>) {
     setExercises((prev) =>
@@ -146,6 +209,16 @@ export function ActiveWorkout({ routine, onExit }: { routine: Routine; onExit: (
           Përfundo
         </button>
       </header>
+
+      {/* Renditja e sfidës live (vetëm kur ka sfidë aktive) */}
+      {challengeLive && liveChallenge.challenge && (
+        <LiveChallengeBar
+          participants={liveChallenge.participants}
+          mode={liveChallenge.challenge.mode}
+          myId={userId}
+          unit={unit}
+        />
+      )}
 
       {/* Live summary */}
       <div className="grid grid-cols-2 gap-3 px-4 py-4">

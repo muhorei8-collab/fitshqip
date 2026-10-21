@@ -12,6 +12,7 @@ import { uid } from '@/lib/storage'
 import { SYSTEM_ROUTINES } from '@/lib/exercises'
 import { supabase } from '@/lib/supabase/client'
 import { mapGoals, mapMetric, mapProfile, mapRoutine, mapSession } from '@/lib/supabase/mappers'
+import { TERMS_VERSION } from '@/components/auth/terms-content'
 
 export interface SignUpData {
   fullName: string
@@ -21,6 +22,7 @@ export interface SignUpData {
   height: number
   weight: number
   level: User['level']
+  acceptedTerms: boolean
 }
 
 interface AppState {
@@ -136,6 +138,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const routines = useMemo(() => [...SYSTEM_ROUTINES, ...ownRoutines], [ownRoutines])
 
   const signUp = useCallback(async (data: SignUpData) => {
+    if (!data.acceptedTerms) {
+      return { ok: false, error: 'Duhet të pranosh Kushtet dhe të Drejtat e Rezervuara për të vazhduar.' }
+    }
     const colors = ['#E5352B', '#22D3A8', '#F59E0B', '#6366F1', '#EC4899', '#0EA5E9']
     const { error } = await supabase.auth.signUp({
       email: data.email,
@@ -148,6 +153,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           weight: data.weight,
           level: data.level,
           avatar_color: colors[Math.floor(Math.random() * colors.length)],
+          accepted_terms_at: new Date().toISOString(),
+          terms_version: TERMS_VERSION,
         },
       },
     })

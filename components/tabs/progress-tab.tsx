@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { Plus, Target, Trophy } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
 import { Card, Chip, EmptyState, Field, Modal, ProgressBar, SectionTitle, inputClass } from '@/components/shared/ui'
-import { LineChart } from '@/components/shared/charts'
+import { DatedLineChart } from '@/components/shared/dated-line-chart'
 import { computePRs } from '@/lib/storage'
 import { displayWeight, formatVolume, kgToUnit } from '@/lib/format'
 
@@ -32,9 +32,10 @@ export function ProgressTab() {
     return metrics
       .filter((m) => new Date(m.date).getTime() >= cutoff)
       .map((m) => ({
-        label: new Date(m.date).toLocaleDateString('sq-AL', { day: 'numeric', month: 'short' }),
+        date: new Date(m.date).getTime(),
         value: kgToUnit(m.weight, unit),
       }))
+      .sort((a, b) => a.date - b.date)
   }, [metrics, range, unit])
 
   const prs = useMemo(() => computePRs(sessions), [sessions])
@@ -111,7 +112,7 @@ export function ProgressTab() {
           ))}
         </div>
         {chartData.length > 1 ? (
-          <LineChart data={chartData} unit={unit} />
+          <DatedLineChart data={chartData} unit={unit} />
         ) : (
           <p className="py-8 text-center text-sm text-muted-foreground">
             Regjistro peshën disa herë për të parë grafikun.

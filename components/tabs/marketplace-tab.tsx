@@ -68,7 +68,7 @@ export function MarketplaceTab() {
   return (
     <div className="flex flex-col gap-5 px-4 pb-28 pt-6">
       <header>
-        <h1 className="text-2xl font-bold tracking-tight">Marketplace</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Dyqani</h1>
         <p className="mt-1 text-sm text-muted-foreground text-pretty">
           Zbulo së shpejti produkte dhe përmbajtje të krijuara për rrugëtimin tënd fitness.
         </p>

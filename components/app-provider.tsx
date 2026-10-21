@@ -130,6 +130,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [loadForUser, clearAll])
 
+  // Ftesat për sfidat live: kur një shok të fton, shfaqet menjëherë një njoftim.
+  useEffect(() => {
+    const uid = currentUser?.id
+    if (!uid) return
+    const channel = supabase
+      .channel(`challenge-invites-${uid}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'challenge_participants', filter: `user_id=eq.${uid}` },
+        (payload) => {
+          if ((payload.new as { status?: string }).status === 'invited') {
+            showToast('Një shok të ftoi në një sfidë live! Hape te Profili → Palestra me Miqtë.', 'info')
+          }
+        },
+      )
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [currentUser?.id, showToast])
+
   const sessions = useMemo(
     () => allSessions.filter((s) => s.userId === currentUser?.id),
     [allSessions, currentUser],

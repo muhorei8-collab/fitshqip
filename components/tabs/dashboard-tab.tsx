@@ -9,6 +9,14 @@ import { BarChart } from '@/components/shared/charts'
 import { computePRs, computeStreak, startOfWeek } from '@/lib/storage'
 import { dailyTip } from '@/lib/ai-trainer'
 import { formatDuration, formatVolume, DAYS_SQ } from '@/lib/format'
+import type { Level } from '@/lib/types'
+
+// Vlerësime mesatare — varen nga stërvitja, ushqimi, gjumi dhe gjenetika.
+const LEVEL_STEPS: { level: Level; toNext: string | null }[] = [
+  { level: 'Fillestar', toNext: '~6–12 muaj' },
+  { level: 'Mesatar', toNext: '~2–3 vjet' },
+  { level: 'Avancuar', toNext: null },
+]
 
 export function DashboardTab() {
   const { currentUser, sessions } = useApp()
@@ -49,6 +57,10 @@ export function DashboardTab() {
 
   if (!currentUser) return null
   const firstName = currentUser.fullName.split(' ')[0]
+  const currentLevelIdx = Math.max(
+    0,
+    LEVEL_STEPS.findIndex((s) => s.level === currentUser.level),
+  )
 
   const quickActions = [
     { label: 'Krijo Rutinë', icon: ListPlus, onClick: () => setTab('workout') },
@@ -130,11 +142,52 @@ export function DashboardTab() {
         </div>
       </div>
 
-      {/* Weekly chart */}
-      <Card>
-        <SectionTitle>Aktiviteti javor (vëllimi)</SectionTitle>
-        <BarChart data={weeklyChart} />
-      </Card>
+      {/* Weekly chart + level path (side by side) */}
+      <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-[3fr_2fr]">
+        <Card className="min-w-0 p-3.5">
+          <SectionTitle>Aktiviteti javor (vëllimi)</SectionTitle>
+          <BarChart data={weeklyChart} />
+        </Card>
+
+        <Card className="flex min-w-0 flex-col p-3.5">
+          <SectionTitle>Niveli</SectionTitle>
+          <ol className="flex flex-1 flex-col">
+            {LEVEL_STEPS.map((step, i) => {
+              const reached = i <= currentLevelIdx
+              const isCurrent = i === currentLevelIdx
+              return (
+                <li key={step.level} className="flex gap-2.5">
+                  <div className="flex flex-col items-center">
+                    <span
+                      className={`mt-1 h-3 w-3 shrink-0 rounded-full border-2 ${
+                        isCurrent
+                          ? 'border-primary bg-primary ring-4 ring-primary/20'
+                          : reached
+                            ? 'border-primary bg-primary/60'
+                            : 'border-border bg-card'
+                      }`}
+                    />
+                    {step.toNext && <span className="my-1 w-px flex-1 bg-border" />}
+                  </div>
+                  <div className="pb-3">
+                    <p
+                      className={`text-sm font-semibold leading-tight ${
+                        isCurrent ? 'text-primary' : reached ? 'text-foreground' : 'text-muted-foreground'
+                      }`}
+                    >
+                      {step.level}
+                    </p>
+                    {step.toNext && <p className="mt-0.5 text-[11px] text-muted-foreground">{step.toNext}</p>}
+                  </div>
+                </li>
+              )
+            })}
+          </ol>
+          <p className="text-[10px] leading-snug text-muted-foreground">
+            Vlerësim mesatar. Varet nga stërvitja, ushqimi dhe gjumi.
+          </p>
+        </Card>
+      </div>
 
       {/* Latest PR */}
       {latestPR && (

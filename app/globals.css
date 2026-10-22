@@ -56,6 +56,31 @@
   --radius: 0.875rem;
 }
 
+/* Tema e çelët: aktivizohet nga Profili → Cilësimet (data-theme="light" te <html>) */
+:root[data-theme='light'] {
+  color-scheme: light;
+  --background: #f6f6f7;
+  --foreground: #0a0a0b;
+  --card: #ffffff;
+  --card-foreground: #0a0a0b;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0b;
+  --primary: #e5352b;
+  --primary-foreground: #ffffff;
+  --secondary: #eeeef0;
+  --secondary-foreground: #0a0a0b;
+  --muted: #eeeef0;
+  --muted-foreground: #5f5f68;
+  --accent: #0b8a6c;
+  --accent-foreground: #ffffff;
+  --success: #0b8a6c;
+  --success-foreground: #ffffff;
+  --destructive: #d42a20;
+  --border: #e2e2e6;
+  --input: #e2e2e6;
+  --ring: #e5352b;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

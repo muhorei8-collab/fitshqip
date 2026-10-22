@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  colorScheme: 'dark',
+  colorScheme: 'dark light',
   themeColor: '#0a0a0b',
   width: 'device-width',
   initialScale: 1,
@@ -34,13 +34,19 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 }
 
+// Zbaton temën e ruajtur para se faqja të pikturohet (pa pulsim të errët → të çelët).
+const THEME_SCRIPT = `(function(){try{if(localStorage.getItem('fitshqip-theme')==='light'){document.documentElement.setAttribute('data-theme','light');var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content','#f6f6f7');}}catch(e){}})();`
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <html lang="sq" className={`bg-background ${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="sq" suppressHydrationWarning className={`bg-background ${geistSans.variable} ${geistMono.variable}`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="font-sans antialiased">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}

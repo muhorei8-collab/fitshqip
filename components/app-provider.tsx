@@ -13,6 +13,7 @@ import { SYSTEM_ROUTINES } from '@/lib/exercises'
 import { supabase } from '@/lib/supabase/client'
 import { mapGoals, mapMetric, mapProfile, mapRoutine, mapSession } from '@/lib/supabase/mappers'
 import { TERMS_VERSION } from '@/components/auth/terms-content'
+import { deleteAllMyPhotos } from '@/lib/supabase/photos'
 
 export interface SignUpData {
   fullName: string
@@ -306,6 +307,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       supabase.from('routines').delete().eq('owner_id', currentUser.id),
       supabase.from('body_metrics').delete().eq('user_id', currentUser.id),
       supabase.from('goals').delete().eq('user_id', currentUser.id),
+      deleteAllMyPhotos(currentUser.id),
     ])
     setAllSessions((prev) => prev.filter((s) => s.userId !== currentUser.id))
     setOwnRoutines([])

@@ -44,7 +44,7 @@ interface AppState {
   addSession: (s: Omit<WorkoutSession, 'id' | 'userId'>) => Promise<void>
   addRoutine: (name: string, description: string, exercises: Routine['exercises']) => Promise<void>
   deleteRoutine: (id: string) => Promise<void>
-  addMetric: (weight: number) => Promise<void>
+  addMetric: (weight: number) => Promise<boolean>
   setGoals: (g: Omit<Goals, 'userId'>) => Promise<void>
   resetData: () => Promise<void>
   showToast: (message: string, tone?: 'success' | 'info' | 'error') => void
@@ -158,6 +158,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const routines = useMemo(() => [...SYSTEM_ROUTINES, ...ownRoutines], [ownRoutines])
 
+  // Pesha e përgjithshme = matja më e fundit e regjistruar (ajo që shihet edhe te grafiku).
+  const latestMetric = useMemo(
+    () =>
+      metrics.length ? metrics.reduce((a, b) => (+new Date(b.date) >= +new Date(a.date) ? b : a)) : null,
+    [metrics],
+  )
+  const displayUser = useMemo(
+    () => (currentUser && latestMetric ? { ...currentUser, weight: latestMetric.weight } : currentUser),
+    [currentUser, latestMetric],
+  )
+
   const signUp = useCallback(async (data: SignUpData) => {
     if (!data.acceptedTerms) {
       return { ok: false, error: 'Duhet të pranosh Kushtet dhe të Drejtat e Rezervuara për të vazhduar.' }
@@ -258,16 +269,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const addMetric = useCallback(
     async (weight: number) => {
-      if (!currentUser) return
+      if (!currentUser) return false
       const { data, error } = await supabase
         .from('body_metrics')
         .insert({ user_id: currentUser.id, date: new Date().toISOString(), weight })
         .select()
         .single()
-      if (!error && data) setMetrics((prev) => [...prev, mapMetric(data)])
+      if (error || !data) {
+        showToast('Pesha nuk u ruajt. Provo përsëri.', 'error')
+        return false
+      }
+      setMetrics((prev) => [...prev, mapMetric(data)])
       await updateProfile({ weight })
+      return true
     },
-    [currentUser, updateProfile],
+    [currentUser, updateProfile, showToast],
   )
 
   const setGoals = useCallback(
@@ -299,7 +315,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const value: AppState = {
     ready,
-    currentUser,
+    currentUser: displayUser,
     users,
     sessions,
     allSessions,

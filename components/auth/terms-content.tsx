@@ -1,5 +1,5 @@
 // Versioni i kushteve. Ndrysho datën kur përditëson tekstin më poshtë.
-export const TERMS_VERSION = '2026-10-22'
+export const TERMS_VERSION = '2026-10-23'
 
 const h = 'mt-4 text-sm font-semibold text-foreground first:mt-0'
 const p = 'mt-1 text-sm leading-relaxed text-muted-foreground text-pretty'
@@ -31,8 +31,9 @@ export function TermsContent() {
       <p className={p}>
         Ruajmë emrin, email-in, moshën, gjatësinë, peshën, nivelin, stërvitjet, matjet dhe objektivat e tua vetëm që
         aplikacioni të funksionojë. Nuk i shesim të dhënat e tua. Kur përdor funksione sociale (miqtë, klasifikimi),
-        pjesë të të dhënave të stërvitjes mund t’u shfaqen përdoruesve të tjerë brenda aplikacionit. Stërvitjet,
-        matjet dhe objektivat mund t’i fshish nga Profili → Rivendos të dhënat.
+        pjesë të të dhënave të stërvitjes mund t’u shfaqen përdoruesve të tjerë brenda aplikacionit. Fotot e
+        progresit që ngarkon ruhen private dhe nuk u shfaqen përdoruesve të tjerë. Stërvitjet, matjet, objektivat dhe
+        fotot mund t’i fshish nga Profili → Rivendos të dhënat.
       </p>
 
       <h3 className={h}>5. Shëndeti</h3>

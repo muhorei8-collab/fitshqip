@@ -5,6 +5,7 @@ import {
   Calculator,
   ChevronRight,
   LogOut,
+  Moon,
   Ruler,
   Shield,
   Trash2,
@@ -18,12 +19,14 @@ import { Avatar, Card, Field, Modal, SectionTitle, inputClass } from '@/componen
 import { PersonalIdCard } from '@/components/shared/personal-id-card'
 import type { Level } from '@/lib/types'
 import { displayWeight } from '@/lib/format'
+import { useTheme } from '@/lib/theme'
 
 const LEVELS: Level[] = ['Fillestar', 'Mesatar', 'Avancuar']
 
 export function ProfileTab() {
   const { currentUser, updateProfile, addMetric, resetData, logOut, showToast } = useApp()
   const { openScreen } = useNav()
+  const { theme, setTheme } = useTheme()
   const [editOpen, setEditOpen] = useState(false)
   const [resetOpen, setResetOpen] = useState(false)
 
@@ -157,6 +160,31 @@ export function ProfileTab() {
                   }`}
                 >
                   {u}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Tema: errët / çelët */}
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-2 text-sm font-medium">
+              <Moon className="h-4 w-4 text-muted-foreground" />
+              Pamja
+            </span>
+            <div className="flex gap-1 rounded-xl border border-border p-1">
+              {([
+                ['dark', 'Errët'],
+                ['light', 'Çelët'],
+              ] as const).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setTheme(value)}
+                  className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors ${
+                    theme === value ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'
+                  }`}
+                >
+                  {label}
                 </button>
               ))}
             </div>

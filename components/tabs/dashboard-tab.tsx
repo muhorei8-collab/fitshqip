@@ -1,10 +1,10 @@
 'use client'
 
-import { useMemo } from 'react'
-import { BookOpen, Dumbbell, Flame, ListPlus, Scale, Timer, Trophy, Weight } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { BookOpen, Dumbbell, Flame, ListPlus, Scale, Sparkles, Timer, Trophy, Weight } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
 import { useNav } from '@/components/nav'
-import { Avatar, Card, SectionTitle } from '@/components/shared/ui'
+import { Avatar, Card, Modal, SectionTitle } from '@/components/shared/ui'
 import { BarChart } from '@/components/shared/charts'
 import { computePRs, computeStreak, startOfWeek } from '@/lib/storage'
 import { dailyTip } from '@/lib/ai-trainer'
@@ -21,6 +21,7 @@ const LEVEL_STEPS: { level: Level; toNext: string | null }[] = [
 export function DashboardTab() {
   const { currentUser, sessions } = useApp()
   const { triggerWorkout, openScreen, setTab } = useNav()
+  const [aiOpen, setAiOpen] = useState(false)
 
   const stats = useMemo(() => {
     const weekStart = startOfWeek()
@@ -140,6 +141,24 @@ export function DashboardTab() {
             )
           })}
         </div>
+
+        {/* Kalori me AI (së shpejti) */}
+        <button
+          type="button"
+          onClick={() => setAiOpen(true)}
+          className="mt-3 flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-3.5 text-left transition-colors active:bg-secondary"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary">
+            <Sparkles className="h-5 w-5 text-primary" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">Kalori me AI</span>
+            <span className="block text-xs text-muted-foreground">Llogarit kaloritë e ushqimeve të tua</span>
+          </span>
+          <span className="shrink-0 rounded-full bg-primary/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-primary">
+            Së shpejti
+          </span>
+        </button>
       </div>
 
       {/* Weekly chart + level path (side by side) */}
@@ -212,6 +231,25 @@ export function DashboardTab() {
           {dailyTip()}
         </p>
       </Card>
+
+      <Modal open={aiOpen} onClose={() => setAiOpen(false)} title="Kalori me AI">
+        <div className="flex flex-col items-center text-center">
+          <div className="animate-pop flex h-20 w-20 items-center justify-center rounded-full bg-primary/15">
+            <Sparkles className="h-10 w-10 text-primary" />
+          </div>
+          <h3 className="mt-4 text-xl font-black tracking-tight">Së shpejti në FitShqip</h3>
+          <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted-foreground text-pretty">
+            Po përgatisim llogaritjen e kalorive të ushqimeve me inteligjencë artificiale. Do të hapet shumë shpejt.
+          </p>
+          <button
+            type="button"
+            onClick={() => setAiOpen(false)}
+            className="mt-6 w-full rounded-xl bg-primary py-3.5 font-semibold text-primary-foreground"
+          >
+            Në rregull
+          </button>
+        </div>
+      </Modal>
     </div>
   )
 }

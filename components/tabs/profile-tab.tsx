@@ -270,7 +270,7 @@ export function ProfileTab() {
       {/* Reset modal */}
       <Modal open={resetOpen} onClose={() => setResetOpen(false)} title="Rivendos të dhënat?">
         <p className="text-sm text-muted-foreground">
-          Ky veprim do të fshijë të gjitha stërvitjet, rekordet, rutinat dhe matjet e tua. Llogaria mbetet aktive. Ky
+          Ky veprim do të fshijë të gjitha stërvitjet, rekordet, rutinat, matjet dhe fotot e progresit. Llogaria mbetet aktive. Ky
           veprim nuk mund të zhbëhet.
         </p>
         <div className="mt-5 grid grid-cols-2 gap-3">

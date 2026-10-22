@@ -5,6 +5,7 @@ import { Plus, Target, Trophy } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
 import { Card, Chip, EmptyState, Field, Modal, ProgressBar, SectionTitle, inputClass } from '@/components/shared/ui'
 import { DatedLineChart } from '@/components/shared/dated-line-chart'
+import { ProgressPhotos } from '@/components/shared/progress-photos'
 import { computePRs } from '@/lib/storage'
 import { displayWeight, formatVolume, kgToUnit } from '@/lib/format'
 
@@ -140,6 +141,9 @@ export function ProgressTab() {
           </p>
         )}
       </Card>
+
+      {/* Fotot e progresit */}
+      <ProgressPhotos />
 
       {/* Goals */}
       <Card>

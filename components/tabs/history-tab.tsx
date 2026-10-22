@@ -1,20 +1,32 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock, Dumbbell, Weight } from 'lucide-react'
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock, Dumbbell, Scale, Weight } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
 import { Card, Chip, EmptyState, SectionTitle } from '@/components/shared/ui'
 import { startOfWeek } from '@/lib/storage'
-import { formatDayShort, formatDuration, formatVolume, MONTHS_SQ } from '@/lib/format'
+import { formatDayShort, formatDuration, formatVolume, kgToUnit, MONTHS_SQ } from '@/lib/format'
 import type { WorkoutSession } from '@/lib/types'
 
 const FILTERS = ['Të gjitha', 'Këtë javë', 'Këtë muaj'] as const
 
+// Çelës ditor sipas orës LOKALE (toISOString përdor UTC dhe e zhvendos ditën).
+const pad = (n: number) => String(n).padStart(2, '0')
+const localKey = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+const hhmm = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`
+
+interface WeightEntry {
+  at: Date
+  kg: number
+  delta: number | null // ndryshimi nga matja e mëparshme (kg)
+}
+
 export function HistoryTab() {
-  const { currentUser, sessions } = useApp()
+  const { currentUser, sessions, metrics } = useApp()
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>('Të gjitha')
   const [expanded, setExpanded] = useState<string | null>(null)
   const [calDate, setCalDate] = useState(new Date())
+  const [selectedDay, setSelectedDay] = useState<string | null>(null)
   const unit = currentUser?.unit ?? 'kg'
 
   const sorted = useMemo(
@@ -39,9 +51,22 @@ export function HistoryTab() {
 
   const workoutDays = useMemo(() => {
     const set = new Set<string>()
-    sessions.forEach((s) => set.add(new Date(s.date).toISOString().slice(0, 10)))
+    sessions.forEach((s) => set.add(localKey(new Date(s.date))))
     return set
   }, [sessions])
+
+  // Matjet e peshës të grupuara sipas ditës, me ndryshimin nga matja e mëparshme.
+  const weightByDay = useMemo(() => {
+    const ordered = [...metrics].sort((a, b) => +new Date(a.date) - +new Date(b.date))
+    const map = new Map<string, WeightEntry[]>()
+    ordered.forEach((m, i) => {
+      const at = new Date(m.date)
+      const key = localKey(at)
+      const entry: WeightEntry = { at, kg: m.weight, delta: i > 0 ? m.weight - ordered[i - 1].weight : null }
+      map.set(key, [...(map.get(key) ?? []), entry])
+    })
+    return map
+  }, [metrics])
 
   // build calendar grid
   const calendar = useMemo(() => {
@@ -56,6 +81,9 @@ export function HistoryTab() {
     return cells
   }, [calDate])
 
+  const todayKey = localKey(new Date())
+  const selectedEntries = selectedDay ? (weightByDay.get(selectedDay) ?? []) : []
+
   return (
     <div className="flex flex-col gap-5 px-4 pb-28 pt-6">
       <header>
@@ -68,7 +96,10 @@ export function HistoryTab() {
         <div className="mb-3 flex items-center justify-between">
           <button
             type="button"
-            onClick={() => setCalDate(new Date(calDate.getFullYear(), calDate.getMonth() - 1, 1))}
+            onClick={() => {
+              setCalDate(new Date(calDate.getFullYear(), calDate.getMonth() - 1, 1))
+              setSelectedDay(null)
+            }}
             className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary"
             aria-label="Muaji i mëparshëm"
           >
@@ -79,7 +110,10 @@ export function HistoryTab() {
           </span>
           <button
             type="button"
-            onClick={() => setCalDate(new Date(calDate.getFullYear(), calDate.getMonth() + 1, 1))}
+            onClick={() => {
+              setCalDate(new Date(calDate.getFullYear(), calDate.getMonth() + 1, 1))
+              setSelectedDay(null)
+            }}
             className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary"
             aria-label="Muaji tjetër"
           >
@@ -94,25 +128,90 @@ export function HistoryTab() {
           ))}
           {calendar.map((cell, i) => {
             if (!cell) return <span key={i} />
-            const key = cell.toISOString().slice(0, 10)
+            const key = localKey(cell)
             const trained = workoutDays.has(key)
-            const isToday = key === new Date().toISOString().slice(0, 10)
+            const weighed = weightByDay.has(key)
+            const isToday = key === todayKey
+            const selected = selectedDay === key
+
+            const base = 'relative flex aspect-square items-center justify-center rounded-lg text-xs'
+            const tone = trained
+              ? 'bg-primary font-bold text-primary-foreground'
+              : weighed
+                ? 'bg-amber-400 font-bold text-black'
+                : isToday
+                  ? 'border border-primary/50 text-foreground'
+                  : 'text-muted-foreground'
+
+            if (weighed) {
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setSelectedDay(selected ? null : key)}
+                  className={`${base} ${tone} ${selected ? 'ring-2 ring-foreground/70' : ''}`}
+                  aria-label={`Shiko peshën e regjistruar më ${cell.getDate()}`}
+                >
+                  {cell.getDate()}
+                  {trained && <span className="absolute right-0.5 top-0.5 h-1.5 w-1.5 rounded-full bg-amber-400" />}
+                </button>
+              )
+            }
             return (
-              <span
-                key={i}
-                className={`flex aspect-square items-center justify-center rounded-lg text-xs ${
-                  trained
-                    ? 'bg-primary font-bold text-primary-foreground'
-                    : isToday
-                      ? 'border border-primary/50 text-foreground'
-                      : 'text-muted-foreground'
-                }`}
-              >
+              <span key={i} className={`${base} ${tone}`}>
                 {cell.getDate()}
               </span>
             )
           })}
         </div>
+
+        {/* Legjenda */}
+        <div className="mt-3 flex items-center gap-4 text-[11px] text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-sm bg-primary" />
+            Stërvitje
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-sm bg-amber-400" />
+            Peshë e regjistruar
+          </span>
+        </div>
+
+        {/* Detajet e ditës së zgjedhur */}
+        {selectedEntries.length > 0 && (
+          <div className="mt-3 border-t border-border pt-3">
+            <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+              <Scale className="h-3.5 w-3.5 text-amber-400" />
+              {selectedEntries[0].at.toLocaleDateString('sq-AL', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })}
+            </p>
+            <div className="flex flex-col gap-1.5">
+              {selectedEntries.map((e, i) => (
+                <div key={i} className="flex items-center justify-between rounded-xl bg-secondary px-3 py-2 text-sm">
+                  <span className="flex items-center gap-1.5 text-muted-foreground">
+                    <Clock className="h-3.5 w-3.5" />
+                    {hhmm(e.at)}
+                  </span>
+                  <span className="flex items-baseline gap-2">
+                    <span className="font-bold">
+                      {kgToUnit(e.kg, unit).toFixed(1)} {unit}
+                    </span>
+                    {e.delta !== null && e.delta !== 0 && (
+                      <span className={`text-xs font-medium ${e.delta > 0 ? 'text-success' : 'text-primary'}`}>
+                        {e.delta > 0 ? '+' : ''}
+                        {kgToUnit(e.delta, unit).toFixed(1)}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </Card>
 
       {/* Filters */}

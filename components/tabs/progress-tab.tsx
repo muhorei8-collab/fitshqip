@@ -42,18 +42,34 @@ export function ProgressTab() {
 
   const currentWeight = currentUser?.weight ?? 0
   const startWeight = metrics[0]?.weight ?? currentWeight
-  const weightDelta = currentWeight - startWeight
+  // Ndryshimi nga matja e mëparshme (jo nga e para)
+  const prevWeight = useMemo(() => {
+    const ordered = [...metrics].sort((a, b) => +new Date(a.date) - +new Date(b.date))
+    return ordered.length >= 2 ? ordered[ordered.length - 2].weight : null
+  }, [metrics])
+  const weightDelta = prevWeight === null ? 0 : currentWeight - prevWeight
 
   const toKg = (v: number) => (unit === 'lb' ? v / 2.20462 : v)
 
-  function saveWeight() {
+  async function saveWeight() {
     const w = Number(newWeight)
     if (!w || w <= 0) {
       showToast('Vendos një peshë të vlefshme.', 'error')
       return
     }
-    addMetric(Math.round(toKg(w) * 10) / 10)
-    showToast('Pesha u regjistrua!', 'success')
+    const kg = Math.round(toKg(w) * 10) / 10
+    const diff = kg - currentWeight
+    const ok = await addMetric(kg)
+    if (!ok) return
+    const amount = `${Math.abs(kgToUnit(diff, unit)).toFixed(1)} ${unit}`
+    showToast(
+      diff > 0
+        ? `Pesha u regjistrua! Shtove ${amount} nga matja e fundit.`
+        : diff < 0
+          ? `Pesha u regjistrua! Humbe ${amount} nga matja e fundit.`
+          : 'Pesha u regjistrua! Pa ndryshim nga matja e fundit.',
+      'success',
+    )
     setNewWeight('')
     setWeightOpen(false)
   }
@@ -99,10 +115,15 @@ export function ProgressTab() {
         <SectionTitle>Pesha trupore</SectionTitle>
         <div className="mb-3 flex items-baseline gap-2">
           <span className="text-3xl font-black">{displayWeight(currentWeight, unit)}</span>
-          <span className={`text-sm font-medium ${weightDelta >= 0 ? 'text-success' : 'text-primary'}`}>
-            {weightDelta >= 0 ? '+' : ''}
-            {kgToUnit(weightDelta, unit).toFixed(1)} {unit}
-          </span>
+          {prevWeight !== null && (
+            <span className="flex items-baseline gap-1.5">
+              <span className={`text-sm font-medium ${weightDelta >= 0 ? 'text-success' : 'text-primary'}`}>
+                {weightDelta >= 0 ? '+' : ''}
+                {kgToUnit(weightDelta, unit).toFixed(1)} {unit}
+              </span>
+              <span className="text-xs text-muted-foreground">nga matja e fundit</span>
+            </span>
+          )}
         </div>
         <div className="no-scrollbar -mx-1 mb-4 flex gap-2 overflow-x-auto px-1">
           {RANGES.map((r, i) => (

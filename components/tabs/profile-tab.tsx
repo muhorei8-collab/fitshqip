@@ -22,7 +22,7 @@ import { displayWeight } from '@/lib/format'
 const LEVELS: Level[] = ['Fillestar', 'Mesatar', 'Avancuar']
 
 export function ProfileTab() {
-  const { currentUser, updateProfile, resetData, logOut, showToast } = useApp()
+  const { currentUser, updateProfile, addMetric, resetData, logOut, showToast } = useApp()
   const { openScreen } = useNav()
   const [editOpen, setEditOpen] = useState(false)
   const [resetOpen, setResetOpen] = useState(false)
@@ -45,9 +45,11 @@ export function ProfileTab() {
       fullName: name.trim(),
       age: Number(age) || currentUser!.age,
       height: Number(height) || currentUser!.height,
-      weight: Number(weight) || currentUser!.weight,
       level,
     })
+    // Pesha e re regjistrohet si matje (del edhe te grafiku dhe Historia).
+    const newWeight = Number(weight)
+    if (newWeight > 0 && newWeight !== currentUser!.weight) await addMetric(newWeight)
     showToast('Profili u përditësua!', 'success')
     setEditOpen(false)
   }

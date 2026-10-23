@@ -98,7 +98,7 @@ function useClientSummaries(active: CoachLinkWithPerson[]) {
   return map
 }
 
-export function CoachOffice({ onBack }: { onBack: () => void }) {
+export function CoachOffice({ onBack }: { onBack?: () => void }) {
   const { currentUser, showToast } = useApp()
   const unit = currentUser?.unit ?? 'kg'
   const { links, loading, error, reload } = useCoachLinks(currentUser?.id, 'coach')
@@ -150,13 +150,15 @@ export function CoachOffice({ onBack }: { onBack: () => void }) {
           title="Zyra është për trajnerët"
           description="Kjo pjesë hapet vetëm për llogaritë e regjistruara si trajner."
           action={
-            <button
-              type="button"
-              onClick={onBack}
-              className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
-            >
-              Kthehu
-            </button>
+            onBack ? (
+              <button
+                type="button"
+                onClick={onBack}
+                className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
+              >
+                Kthehu
+              </button>
+            ) : undefined
           }
         />
       </div>
@@ -179,14 +181,16 @@ export function CoachOffice({ onBack }: { onBack: () => void }) {
   return (
     <div className="min-h-dvh pb-28">
       <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary"
-          aria-label="Kthehu"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary"
+            aria-label="Kthehu"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+        )}
         <div className="min-w-0">
           <h1 className="truncate text-lg font-bold leading-tight">Zyra</h1>
           <p className="truncate text-xs text-muted-foreground">Klientët dhe progresi i tyre</p>

@@ -23,6 +23,7 @@ export interface SignUpData {
   height: number
   weight: number
   level: User['level']
+  role: User['role']
   acceptedTerms: boolean
 }
 
@@ -152,6 +153,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [currentUser?.id, showToast])
 
+  // Ftesat e trajnerëve: njoftim i menjëhershëm kur një trajner të fton.
+  useEffect(() => {
+    const uid = currentUser?.id
+    if (!uid) return
+    const channel = supabase
+      .channel(`coach-invites-${uid}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'coach_clients', filter: `client_id=eq.${uid}` },
+        () => showToast('Një trajner të ftoi të lidhesh. Shiko Profili → Trajneri im.', 'info'),
+      )
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [currentUser?.id, showToast])
+
   const sessions = useMemo(
     () => allSessions.filter((s) => s.userId === currentUser?.id),
     [allSessions, currentUser],
@@ -185,6 +203,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           height: data.height,
           weight: data.weight,
           level: data.level,
+          role: data.role,
           avatar_color: colors[Math.floor(Math.random() * colors.length)],
           accepted_terms_at: new Date().toISOString(),
           terms_version: TERMS_VERSION,

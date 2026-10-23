@@ -1,6 +1,7 @@
 export type Level = 'Fillestar' | 'Mesatar' | 'Avancuar'
 export type Unit = 'kg' | 'lb'
 export type Goal = 'Bulking' | 'Cutting' | 'Maintenance'
+export type Role = 'client' | 'trainer'
 
 export interface User {
   id: string
@@ -13,6 +14,8 @@ export interface User {
   level: Level
   unit: Unit
   isAdmin: boolean
+  role: Role // vendoset gjatë regjistrimit, mbrohet në DB
+  coachVerified: boolean // e jep vetëm admini (manualisht te Supabase)
   avatarColor: string
   createdAt: string
 }

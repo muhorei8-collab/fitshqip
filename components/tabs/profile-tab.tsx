@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import {
+  Briefcase,
   Calculator,
   ChevronRight,
   LogOut,
@@ -11,6 +12,7 @@ import {
   Trash2,
   Trophy,
   User as UserIcon,
+  UserCheck,
   Users,
 } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
@@ -20,6 +22,8 @@ import { PersonalIdCard } from '@/components/shared/personal-id-card'
 import type { Level } from '@/lib/types'
 import { displayWeight } from '@/lib/format'
 import { useTheme } from '@/lib/theme'
+import { CoachOffice } from '@/components/screens/coach-office'
+import { MyCoachScreen } from '@/components/screens/my-coach-screen'
 
 const LEVELS: Level[] = ['Fillestar', 'Mesatar', 'Avancuar']
 
@@ -29,6 +33,7 @@ export function ProfileTab() {
   const { theme, setTheme } = useTheme()
   const [editOpen, setEditOpen] = useState(false)
   const [resetOpen, setResetOpen] = useState(false)
+  const [view, setView] = useState<'profile' | 'office' | 'mycoach'>('profile')
 
   const [name, setName] = useState(currentUser?.fullName ?? '')
   const [age, setAge] = useState(String(currentUser?.age ?? ''))
@@ -37,6 +42,8 @@ export function ProfileTab() {
   const [level, setLevel] = useState<Level>(currentUser?.level ?? 'Fillestar')
 
   if (!currentUser) return null
+  if (view === 'office') return <CoachOffice onBack={() => setView('profile')} />
+  if (view === 'mycoach') return <MyCoachScreen onBack={() => setView('profile')} />
   const unit = currentUser.unit
 
   async function saveProfile() {
@@ -79,6 +86,11 @@ export function ProfileTab() {
             {currentUser.isAdmin && (
               <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary">
                 ADMIN
+              </span>
+            )}
+            {currentUser.role === 'trainer' && (
+              <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold text-success">
+                {currentUser.coachVerified ? 'TRAJNER ✓' : 'TRAJNER'}
               </span>
             )}
           </div>
@@ -126,6 +138,10 @@ export function ProfileTab() {
         <SectionTitle>Mjete</SectionTitle>
         <Card className="flex flex-col divide-y divide-border p-0">
           <ToolRow icon={Users} label="Palestra me Miqtë" onClick={() => openScreen('friends')} />
+          <ToolRow icon={UserCheck} label="Trajneri im" onClick={() => setView('mycoach')} />
+          {currentUser.role === 'trainer' && (
+            <ToolRow icon={Briefcase} label="Zyra e trajnerit" onClick={() => setView('office')} highlight />
+          )}
           <ToolRow icon={Calculator} label="Kalkulatori i Makros & Kalorive" onClick={() => openScreen('macro')} />
           <ToolRow icon={Trophy} label="Klasifikimi (Leaderboard)" onClick={() => openScreen('leaderboard')} />
           {currentUser.isAdmin && (

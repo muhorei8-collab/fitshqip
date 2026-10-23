@@ -1,6 +1,7 @@
 'use client'
 
-import { CalendarDays, Dumbbell, Home, ShoppingBag, TrendingUp, User } from 'lucide-react'
+import { Briefcase, CalendarDays, Dumbbell, Home, ShoppingBag, TrendingUp, User } from 'lucide-react'
+import { useApp } from '@/components/app-provider'
 import { useNav, type Tab } from '@/components/nav'
 import { cn } from '@/lib/utils'
 
@@ -10,15 +11,19 @@ const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: st
   { id: 'progress', label: 'Progresi', icon: TrendingUp },
   { id: 'history', label: 'Historia', icon: CalendarDays },
   { id: 'marketplace', label: 'Dyqani', icon: ShoppingBag },
+  { id: 'office', label: 'Zyra', icon: Briefcase },
   { id: 'profile', label: 'Profili', icon: User },
 ]
 
 export function BottomNav() {
   const { tab, setTab, screen } = useNav()
+  const { currentUser } = useApp()
+  // "Zyra" shfaqet vetëm për trajnerët; kontrolli i vërtetë është në databazë, jo këtu.
+  const tabs = TABS.filter((t) => t.id !== 'office' || currentUser?.role === 'trainer')
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/90 backdrop-blur-lg">
       <div className="mx-auto flex max-w-md items-stretch justify-between px-2 pb-[env(safe-area-inset-bottom)]">
-        {TABS.map((t) => {
+        {tabs.map((t) => {
           const active = tab === t.id && !screen
           const Icon = t.icon
           return (
@@ -34,7 +39,8 @@ export function BottomNav() {
               />
               <span
                 className={cn(
-                  'text-[10px] font-medium transition-colors',
+                  tabs.length > 6 ? 'text-[9px]' : 'text-[10px]',
+                  'font-medium transition-colors',
                   active ? 'text-primary' : 'text-muted-foreground',
                 )}
               >

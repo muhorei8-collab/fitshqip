@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState } from 'react'
 
-export type Tab = 'dashboard' | 'workout' | 'progress' | 'history' | 'marketplace' | 'profile'
+export type Tab = 'dashboard' | 'workout' | 'progress' | 'history' | 'marketplace' | 'office' | 'profile'
 export type Screen = 'library' | 'leaderboard' | 'macro' | 'admin' | 'friends' | null
 
 interface NavState {

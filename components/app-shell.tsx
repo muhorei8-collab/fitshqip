@@ -16,6 +16,7 @@ import { LeaderboardScreen } from '@/components/screens/leaderboard-screen'
 import { MacroScreen } from '@/components/screens/macro-screen'
 import { AdminScreen } from '@/components/screens/admin-screen'
 import { FriendsScreen } from '@/components/screens/friends-screen'
+import { CoachOffice } from '@/components/screens/coach-office'
 
 function Router() {
   const { tab, screen } = useNav()
@@ -37,6 +38,8 @@ function Router() {
       return <HistoryTab />
     case 'marketplace':
       return <MarketplaceTab />
+    case 'office':
+      return <CoachOffice />
     case 'profile':
       return <ProfileTab />
     default:

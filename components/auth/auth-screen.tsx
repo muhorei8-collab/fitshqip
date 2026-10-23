@@ -23,6 +23,7 @@ export function AuthScreen() {
   const [height, setHeight] = useState('')
   const [weight, setWeight] = useState('')
   const [level, setLevel] = useState<Level>('Fillestar')
+  const [role, setRole] = useState<'client' | 'trainer'>('client')
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [termsOpen, setTermsOpen] = useState(false)
 
@@ -53,6 +54,7 @@ export function AuthScreen() {
         height: Number(height),
         weight: Number(weight),
         level,
+        role,
         acceptedTerms,
       })
       if (!res.ok) setError(res.error ?? 'Gabim gjatë regjistrimit.')
@@ -102,6 +104,36 @@ export function AuthScreen() {
       </div>
 
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
+        {mode === 'signup' && (
+          <Field label="Si do ta përdorësh FitShqip?">
+            <div className="grid grid-cols-2 gap-2">
+              {(
+                [
+                  ['client', 'Klient', 'Stërvitem dhe ndjek progresin'],
+                  ['trainer', 'Trajner', 'Menaxhoj klientë dhe programe'],
+                ] as const
+              ).map(([value, title, hint]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setRole(value)}
+                  className={`rounded-xl border p-3 text-left transition-colors ${
+                    role === value ? 'border-primary bg-primary/10' : 'border-border bg-background'
+                  }`}
+                >
+                  <span className="block text-sm font-semibold">{title}</span>
+                  <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">{hint}</span>
+                </button>
+              ))}
+            </div>
+            {role === 'trainer' && (
+              <p className="mt-2 text-xs text-muted-foreground text-pretty">
+                Do të kesh edhe aplikacionin normal për stërvitjet e tua, plus Zyrën për klientët. Shenjën “I verifikuar”
+                e jep administrata pasi të shqyrtojë profilin.
+              </p>
+            )}
+          </Field>
+        )}
         {mode === 'signup' && (
           <Field label="Emri i plotë">
             <input

@@ -153,3 +153,24 @@ export function usePhotos(userId: string | undefined) {
 
   return { photos, loading, error, reload }
 }
+
+// Për trajnerin: fotot e një klienti (kthehen vetëm nëse klienti ka dhënë lejen për foto;
+// ndryshe RLS në Supabase kthen listë bosh).
+export async function fetchClientPhotos(clientId: string): Promise<ProgressPhoto[]> {
+  const { data, error } = await supabase
+    .from('progress_photos')
+    .select('*')
+    .eq('user_id', clientId)
+    .order('taken_at', { ascending: false })
+  if (error || !data) return []
+  const rows = data.map(mapPhoto)
+  const urls = new Map<string, string>()
+  const paths = rows.flatMap((r) => [r.path, r.thumbPath])
+  if (paths.length > 0) {
+    const { data: signed } = await supabase.storage.from(PHOTO_BUCKET).createSignedUrls(paths, 3600)
+    signed?.forEach((s) => {
+      if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl)
+    })
+  }
+  return rows.map((r) => ({ ...r, url: urls.get(r.path) ?? '', thumbUrl: urls.get(r.thumbPath) ?? '' }))
+}

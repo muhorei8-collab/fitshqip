@@ -15,6 +15,8 @@ export function mapProfile(row: any): User {
     level: row.level,
     unit: row.unit,
     isAdmin: row.is_admin,
+    role: row.role === 'trainer' ? 'trainer' : 'client',
+    coachVerified: !!row.coach_verified,
     avatarColor: row.avatar_color,
     createdAt: row.created_at,
   }

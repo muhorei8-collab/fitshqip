@@ -1,19 +1,48 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Minus, Plus, Search, Trash2 } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
 import { Field, Modal, inputClass } from '@/components/shared/ui'
 import { EXERCISES, MUSCLE_GROUPS } from '@/lib/exercises'
 import type { RoutineExercise } from '@/lib/types'
 
-export function RoutineBuilder({ open, onClose }: { open: boolean; onClose: () => void }) {
+interface RoutineBuilderProps {
+  open: boolean
+  onClose: () => void
+  // Opsionale: përdoren nga trajneri për të ndërtuar një program për klientin.
+  // Pa onSave, sillet si më parë dhe ruan rutinën te përdoruesi.
+  title?: string
+  saveLabel?: string
+  initial?: { name: string; description: string; exercises: RoutineExercise[] }
+  onSave?: (name: string, description: string, exercises: RoutineExercise[]) => Promise<boolean>
+}
+
+export function RoutineBuilder({
+  open,
+  onClose,
+  title = 'Krijo Rutinë',
+  saveLabel = 'Ruaj Rutinën',
+  initial,
+  onSave,
+}: RoutineBuilderProps) {
   const { addRoutine, showToast } = useApp()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [picked, setPicked] = useState<RoutineExercise[]>([])
   const [search, setSearch] = useState('')
   const [muscle, setMuscle] = useState<string>('Të gjitha')
+  const [saving, setSaving] = useState(false)
+
+  // Kur hapet me të dhëna fillestare (ndryshim programi), i mbush fushat.
+  useEffect(() => {
+    if (open && initial) {
+      setName(initial.name)
+      setDescription(initial.description)
+      setPicked(initial.exercises.map((e) => ({ ...e })))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   const filtered = useMemo(() => {
     return EXERCISES.filter((e) => {
@@ -45,13 +74,22 @@ export function RoutineBuilder({ open, onClose }: { open: boolean; onClose: () =
     setMuscle('Të gjitha')
   }
 
-  function save() {
+  async function save() {
     if (!name.trim()) {
       showToast('Vendos një emër për rutinën.', 'error')
       return
     }
     if (picked.length === 0) {
       showToast('Shto të paktën një ushtrim.', 'error')
+      return
+    }
+    if (onSave) {
+      setSaving(true)
+      const ok = await onSave(name.trim(), description.trim(), picked)
+      setSaving(false)
+      if (!ok) return
+      reset()
+      onClose()
       return
     }
     addRoutine(name.trim(), description.trim() || 'Rutinë e personalizuar', picked)
@@ -61,7 +99,7 @@ export function RoutineBuilder({ open, onClose }: { open: boolean; onClose: () =
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Krijo Rutinë" size="lg">
+    <Modal open={open} onClose={onClose} title={title} size="lg">
       <div className="flex flex-col gap-4">
         <Field label="Emri i rutinës">
           <input
@@ -178,10 +216,11 @@ export function RoutineBuilder({ open, onClose }: { open: boolean; onClose: () =
 
         <button
           type="button"
+          disabled={saving}
           onClick={save}
-          className="rounded-xl bg-primary py-3.5 font-semibold text-primary-foreground"
+          className="rounded-xl bg-primary py-3.5 font-semibold text-primary-foreground disabled:opacity-60"
         >
-          Ruaj Rutinën
+          {saving ? 'Po ruhet…' : saveLabel}
         </button>
       </div>
     </Modal>

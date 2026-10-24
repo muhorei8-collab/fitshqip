@@ -7,13 +7,15 @@ import { useNav } from '@/components/nav'
 import { Card, SectionTitle } from '@/components/shared/ui'
 import { ActiveWorkout } from '@/components/workout/active-workout'
 import { RoutineBuilder } from '@/components/workout/routine-builder'
+import { programToRoutine, useAssignedPrograms } from '@/lib/supabase/programs'
 import type { Routine } from '@/lib/types'
 
 export function WorkoutTab() {
-  const { routines, deleteRoutine, showToast } = useApp()
+  const { currentUser, routines, deleteRoutine, showToast } = useApp()
   const { workoutIntent } = useNav()
   const [active, setActive] = useState<Routine | null>(null)
   const [builderOpen, setBuilderOpen] = useState(false)
+  const { programs } = useAssignedPrograms(currentUser?.id)
 
   // The dashboard CTA bumps workoutIntent to jump straight into picking a routine.
   useEffect(() => {
@@ -47,6 +49,22 @@ export function WorkoutTab() {
         <Plus className="h-5 w-5" />
         Krijo Rutinë / + Shto Ushtrime
       </button>
+
+      {programs.length > 0 && (
+        <div>
+          <SectionTitle>Nga trajneri im</SectionTitle>
+          <div className="flex flex-col gap-3">
+            {programs.map((p) => (
+              <RoutineCard
+                key={p.id}
+                routine={programToRoutine(p)}
+                badge={`${p.coachName ?? 'Trajneri'} · v${p.version}`}
+                onStart={() => setActive(programToRoutine(p))}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       <div>
         <SectionTitle>Rutina të gatshme</SectionTitle>
@@ -85,10 +103,12 @@ function RoutineCard({
   routine,
   onStart,
   onDelete,
+  badge,
 }: {
   routine: Routine
   onStart: () => void
   onDelete?: () => void
+  badge?: string
 }) {
   return (
     <Card className="flex flex-col gap-3">
@@ -98,6 +118,11 @@ function RoutineCard({
             <Dumbbell className="h-5 w-5 text-primary" />
           </div>
           <div>
+            {badge && (
+              <span className="mb-1 inline-block rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold text-success">
+                {badge}
+              </span>
+            )}
             <h3 className="font-semibold leading-tight">{routine.name}</h3>
             <p className="text-xs text-muted-foreground">{routine.description}</p>
             <p className="mt-1 text-xs text-muted-foreground">

@@ -17,10 +17,12 @@ import { Avatar, Card, EmptyState, Field, Modal, SectionTitle, inputClass } from
 import { supabase } from '@/lib/supabase/client'
 import { mapMetric, mapSession } from '@/lib/supabase/mappers'
 import { fetchClientPhotos, type ProgressPhoto } from '@/lib/supabase/photos'
+import { PROGRAM_MESSAGES, useClientPrograms, type CoachProgram } from '@/lib/supabase/programs'
+import { RoutineBuilder } from '@/components/workout/routine-builder'
 import { INVITE_MESSAGES, useCoachLinks, type CoachLinkWithPerson } from '@/lib/supabase/coach'
 import { formatDayShort, formatDuration, formatVolume, kgToUnit } from '@/lib/format'
 import { startOfWeek } from '@/lib/storage'
-import type { BodyMetric, WorkoutSession } from '@/lib/types'
+import type { BodyMetric, RoutineExercise, WorkoutSession } from '@/lib/types'
 
 const GENERIC_ERROR = 'Diçka shkoi keq. Provo përsëri.'
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -456,6 +458,9 @@ function ClientDetail({
           </div>
         ) : (
           <>
+            {/* Programet */}
+            <ProgramsSection coachId={currentUser?.id} clientId={link.clientId} clientName={person?.fullName ?? 'klientin'} />
+
             {/* Pesha */}
             <Card>
               <SectionTitle>Pesha</SectionTitle>
@@ -603,5 +608,167 @@ function LockedNote({ text }: { text: string }) {
       <Lock className="h-4 w-4" />
       {text}
     </p>
+  )
+}
+
+function ProgramsSection({
+  coachId,
+  clientId,
+  clientName,
+}: {
+  coachId: string | undefined
+  clientId: string
+  clientName: string
+}) {
+  const { showToast } = useApp()
+  const { programs, loading, reload } = useClientPrograms(coachId, clientId)
+  const [builderOpen, setBuilderOpen] = useState(false)
+  const [editing, setEditing] = useState<CoachProgram | null>(null)
+  const [archiving, setArchiving] = useState<CoachProgram | null>(null)
+  const [archivingBusy, setArchivingBusy] = useState(false)
+
+  const active = programs.filter((p) => p.status === 'active')
+  const archived = programs.filter((p) => p.status === 'archived')
+
+  async function save(name: string, description: string, exercises: RoutineExercise[]): Promise<boolean> {
+    const { data, error } = await supabase.rpc('assign_program', {
+      p_client_id: clientId,
+      p_name: name,
+      p_description: description,
+      p_exercises: exercises,
+      p_replace_id: editing?.id ?? null,
+    })
+    if (error) {
+      showToast(GENERIC_ERROR, 'error')
+      return false
+    }
+    const res = data as { code: string }
+    if (res.code === 'assigned') {
+      showToast(editing ? 'Programi u përditësua (version i ri).' : 'Programi u caktua.', 'success')
+      setEditing(null)
+      reload()
+      return true
+    }
+    showToast(PROGRAM_MESSAGES[res.code] ?? GENERIC_ERROR, 'error')
+    return false
+  }
+
+  async function archive(p: CoachProgram) {
+    setArchivingBusy(true)
+    const { data, error } = await supabase.rpc('archive_program', { p_id: p.id })
+    setArchivingBusy(false)
+    setArchiving(null)
+    if (error || data !== 'ok') showToast(GENERIC_ERROR, 'error')
+    else showToast('Programi u arkivua.', 'info')
+    reload()
+  }
+
+  return (
+    <Card>
+      <SectionTitle
+        action={
+          <button
+            type="button"
+            onClick={() => {
+              setEditing(null)
+              setBuilderOpen(true)
+            }}
+            className="text-sm font-medium text-primary"
+          >
+            Program i ri
+          </button>
+        }
+      >
+        Programet
+      </SectionTitle>
+
+      {loading ? (
+        <p className="py-4 text-center text-sm text-muted-foreground">Po ngarkohet…</p>
+      ) : active.length === 0 ? (
+        <p className="py-3 text-center text-sm text-muted-foreground text-pretty">
+          Ende pa program. Krijo një dhe {clientName} e sheh te skeda Stërvitja.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-2.5">
+          {active.map((p) => (
+            <div key={p.id} className="flex flex-col gap-2 rounded-xl border border-border bg-background p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{p.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    v{p.version} · {p.exercises.length} ushtrime · {fmtShort(p.createdAt)}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditing(p)
+                    setBuilderOpen(true)
+                  }}
+                  className="flex-1 rounded-lg bg-secondary py-2 text-xs font-semibold"
+                >
+                  Ndrysho
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setArchiving(p)}
+                  className="flex-1 rounded-lg border border-border py-2 text-xs font-semibold text-primary"
+                >
+                  Arkivo
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {archived.length > 0 && (
+        <p className="mt-3 text-xs text-muted-foreground">
+          {archived.length} version{archived.length === 1 ? '' : 'e'} të arkivuar (historiku i stërvitjeve të klientit
+          nuk preket).
+        </p>
+      )}
+
+      <RoutineBuilder
+        open={builderOpen}
+        onClose={() => {
+          setBuilderOpen(false)
+          setEditing(null)
+        }}
+        title={editing ? `Ndrysho: ${editing.name}` : `Program për ${clientName}`}
+        saveLabel={editing ? 'Ruaj versionin e ri' : 'Cakto programin'}
+        initial={
+          editing
+            ? { name: editing.name, description: editing.description, exercises: editing.exercises }
+            : undefined
+        }
+        onSave={save}
+      />
+
+      <Modal open={!!archiving} onClose={() => setArchiving(null)} title="Ta arkivosh programin?">
+        <p className="text-sm text-muted-foreground">
+          “{archiving?.name}” nuk do të shfaqet më te klienti. Stërvitjet e kryera më parë mbeten në historikun e tij.
+        </p>
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => setArchiving(null)}
+            className="rounded-xl border border-border py-3 font-semibold"
+          >
+            Anulo
+          </button>
+          <button
+            type="button"
+            disabled={archivingBusy}
+            onClick={() => archiving && archive(archiving)}
+            className="rounded-xl bg-primary py-3 font-semibold text-primary-foreground disabled:opacity-60"
+          >
+            {archivingBusy ? 'Po arkivohet…' : 'Arkivoje'}
+          </button>
+        </div>
+      </Modal>
+    </Card>
   )
 }

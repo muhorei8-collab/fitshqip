@@ -170,6 +170,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [currentUser?.id, showToast])
 
+  // Programet e caktuara: njoftim i menjëhershëm kur trajneri të cakton ose ndryshon një program.
+  useEffect(() => {
+    const uid = currentUser?.id
+    if (!uid) return
+    const channel = supabase
+      .channel(`program-assigned-${uid}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'coach_programs', filter: `client_id=eq.${uid}` },
+        () => showToast('Trajneri yt të caktoi një program. Shiko skedën Stërvitja.', 'info'),
+      )
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [currentUser?.id, showToast])
+
   const sessions = useMemo(
     () => allSessions.filter((s) => s.userId === currentUser?.id),
     [allSessions, currentUser],

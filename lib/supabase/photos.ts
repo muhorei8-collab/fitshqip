@@ -127,6 +127,7 @@ export function usePhotos(userId: string | undefined) {
     const { data, error: e } = await supabase
       .from('progress_photos')
       .select('*')
+      .eq('user_id', userId)
       .order('taken_at', { ascending: false })
     if (e) {
       setError(true)

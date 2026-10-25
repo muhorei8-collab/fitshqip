@@ -75,8 +75,10 @@ export function useAssignedPrograms(userId: string | undefined) {
     const names = new Map<string, string>()
     const coachIds = [...new Set(rows.map((r) => r.coachId))]
     if (coachIds.length > 0) {
-      const { data: profs } = await supabase.from('profiles').select('id, full_name').in('id', coachIds)
-      profs?.forEach((p: any) => names.set(p.id, p.full_name))
+      const { data: profs } = await supabase.rpc('public_profiles')
+      ;(profs ?? []).forEach((p: any) => {
+        if (coachIds.includes(p.id)) names.set(p.id, p.full_name)
+      })
     }
     setPrograms(rows.map((r) => ({ ...r, coachName: names.get(r.coachId) ?? null })))
     setLoading(false)

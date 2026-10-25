@@ -60,3 +60,24 @@ export function mapGoals(row: any): Goals {
     targetLifts: row.target_lifts,
   }
 }
+
+// Profili publik (nga public_profiles()): vetëm ç'duhet për emra, avatarë dhe renditje.
+// Fushat e ndjeshme mbeten bosh; ato i lexon vetëm pronari ose admini.
+export function mapPublicProfile(row: any): User {
+  return {
+    id: row.id,
+    fullName: row.full_name,
+    email: '',
+    personalId: '',
+    age: 0,
+    height: 0,
+    weight: 0,
+    level: row.level,
+    unit: 'kg',
+    isAdmin: false,
+    role: row.role === 'trainer' ? 'trainer' : 'client',
+    coachVerified: !!row.coach_verified,
+    avatarColor: row.avatar_color,
+    createdAt: '',
+  }
+}

@@ -92,11 +92,11 @@ export function useCoachLinks(userId: string | undefined, side: 'coach' | 'clien
     const otherId = (r: CoachLink) => (side === 'coach' ? r.clientId : r.coachId)
     const people = new Map<string, PersonLite>()
     if (rows.length > 0) {
-      const { data: profs } = await supabase
-        .from('profiles')
-        .select('id, full_name, avatar_color, level, personal_id, role, coach_verified')
-        .in('id', rows.map(otherId))
-      profs?.forEach((p: any) => people.set(p.id, mapPerson(p)))
+      const wanted = new Set(rows.map(otherId))
+      const { data: profs } = await supabase.rpc('public_profiles')
+      ;(profs ?? []).forEach((p: any) => {
+        if (wanted.has(p.id)) people.set(p.id, mapPerson(p))
+      })
     }
     setLinks(rows.map((r) => ({ ...r, person: people.get(otherId(r)) ?? null })))
     setError(false)

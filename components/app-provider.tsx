@@ -258,6 +258,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (patch.level !== undefined) dbPatch.level = patch.level
       if (patch.unit !== undefined) dbPatch.unit = patch.unit
       if (patch.avatarUrl !== undefined) dbPatch.avatar_url = patch.avatarUrl
+      if (patch.showInLeaderboard !== undefined) dbPatch.leaderboard_visible = patch.showInLeaderboard
       // Note: isAdmin is deliberately never sent — the database rejects it anyway.
       const { data, error } = await supabase
         .from('profiles')

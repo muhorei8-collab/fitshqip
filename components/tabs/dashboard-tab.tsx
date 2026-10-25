@@ -4,7 +4,8 @@ import { useMemo, useState } from 'react'
 import { BookOpen, Dumbbell, Flame, Scale, Sparkles, Timer, Trophy, Weight } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
 import { useNav } from '@/components/nav'
-import { Avatar, Card, Modal, SectionTitle } from '@/components/shared/ui'
+import { Card, Modal, SectionTitle } from '@/components/shared/ui'
+import { UserAvatar } from '@/components/shared/user-avatar'
 import { BarChart } from '@/components/shared/charts'
 import { computePRs, computeStreak, startOfWeek } from '@/lib/storage'
 import { dailyTip } from '@/lib/ai-trainer'
@@ -76,7 +77,7 @@ export function DashboardTab() {
           <p className="text-sm text-muted-foreground">Përshëndetje,</p>
           <h1 className="text-2xl font-bold tracking-tight">{firstName}</h1>
         </div>
-        <Avatar name={currentUser.fullName} color={currentUser.avatarColor} size={48} />
+        <UserAvatar name={currentUser.fullName} color={currentUser.avatarColor} url={currentUser.avatarUrl} size={48} />
       </header>
 
       {/* Streak */}

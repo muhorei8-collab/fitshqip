@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import {
   Calculator,
+  Camera,
   ChevronRight,
   LogOut,
   Moon,
@@ -16,7 +17,9 @@ import {
 } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
 import { useNav } from '@/components/nav'
-import { Avatar, Card, Field, Modal, SectionTitle, inputClass } from '@/components/shared/ui'
+import { Card, Field, Modal, SectionTitle, inputClass } from '@/components/shared/ui'
+import { UserAvatar } from '@/components/shared/user-avatar'
+import { AvatarEditor } from '@/components/shared/avatar-editor'
 import { PersonalIdCard } from '@/components/shared/personal-id-card'
 import type { Level } from '@/lib/types'
 import { displayWeight } from '@/lib/format'
@@ -32,6 +35,7 @@ export function ProfileTab() {
   const [editOpen, setEditOpen] = useState(false)
   const [resetOpen, setResetOpen] = useState(false)
   const [view, setView] = useState<'profile' | 'mycoach'>('profile')
+  const [photoOpen, setPhotoOpen] = useState(false)
 
   const [name, setName] = useState(currentUser?.fullName ?? '')
   const [age, setAge] = useState(String(currentUser?.age ?? ''))
@@ -76,7 +80,17 @@ export function ProfileTab() {
 
       {/* User info */}
       <Card className="flex items-center gap-4">
-        <Avatar name={currentUser.fullName} color={currentUser.avatarColor} size={60} />
+        <button
+          type="button"
+          onClick={() => setPhotoOpen(true)}
+          className="relative shrink-0"
+          aria-label="Ndrysho foton e profilit"
+        >
+          <UserAvatar name={currentUser.fullName} color={currentUser.avatarColor} url={currentUser.avatarUrl} size={60} />
+          <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground ring-2 ring-card">
+            <Camera className="h-3.5 w-3.5" />
+          </span>
+        </button>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h2 className="truncate text-lg font-bold">{currentUser.fullName}</h2>
@@ -135,7 +149,9 @@ export function ProfileTab() {
         <SectionTitle>Mjete</SectionTitle>
         <Card className="flex flex-col divide-y divide-border p-0">
           <ToolRow icon={Users} label="Palestra me Miqtë" onClick={() => openScreen('friends')} />
-          <ToolRow icon={UserCheck} label="Trajneri im" onClick={() => setView('mycoach')} />
+          {currentUser.role !== 'trainer' && (
+            <ToolRow icon={UserCheck} label="Trajneri im" onClick={() => setView('mycoach')} />
+          )}
           <ToolRow icon={Calculator} label="Kalkulatori i Makros & Kalorive" onClick={() => openScreen('macro')} />
           <ToolRow icon={Trophy} label="Klasifikimi (Leaderboard)" onClick={() => openScreen('leaderboard')} />
           {currentUser.isAdmin && (
@@ -233,6 +249,8 @@ export function ProfileTab() {
           Zhvilluar nga Rei Muho Developments.
         </p>
       </Card>
+
+      <AvatarEditor open={photoOpen} onClose={() => setPhotoOpen(false)} />
 
       {/* Edit modal */}
       <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Ndrysho Profilin">

@@ -1,15 +1,13 @@
 'use client'
 
-import { Briefcase, CalendarDays, Dumbbell, Home, ShoppingBag, TrendingUp, User } from 'lucide-react'
+import { Briefcase, Home, ShoppingBag, TrendingUp, User } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
 import { useNav, type Tab } from '@/components/nav'
 import { cn } from '@/lib/utils'
 
 const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: 'dashboard', label: 'Kryefaqja', icon: Home },
-  { id: 'workout', label: 'Stërvitja', icon: Dumbbell },
   { id: 'progress', label: 'Progresi', icon: TrendingUp },
-  { id: 'history', label: 'Historia', icon: CalendarDays },
   { id: 'marketplace', label: 'Dyqani', icon: ShoppingBag },
   { id: 'office', label: 'Zyra', icon: Briefcase },
   { id: 'profile', label: 'Profili', icon: User },
@@ -24,7 +22,8 @@ export function BottomNav() {
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/90 backdrop-blur-lg">
       <div className="mx-auto flex max-w-md items-stretch justify-between px-2 pb-[env(safe-area-inset-bottom)]">
         {tabs.map((t) => {
-          const active = tab === t.id && !screen
+          // Stërvitja hapet nga Kryefaqja, ndaj aty mbetet i ndezur "Kryefaqja".
+          const active = (tab === t.id || (t.id === 'dashboard' && tab === 'workout')) && !screen
           const Icon = t.icon
           return (
             <button

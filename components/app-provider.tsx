@@ -11,7 +11,7 @@ import type {
 import { uid } from '@/lib/storage'
 import { SYSTEM_ROUTINES } from '@/lib/exercises'
 import { supabase } from '@/lib/supabase/client'
-import { mapGoals, mapMetric, mapProfile, mapRoutine, mapSession } from '@/lib/supabase/mappers'
+import { mapGoals, mapMetric, mapProfile, mapPublicProfile, mapRoutine, mapSession } from '@/lib/supabase/mappers'
 import { TERMS_VERSION } from '@/components/auth/terms-content'
 import { deleteAllMyPhotos } from '@/lib/supabase/photos'
 
@@ -87,9 +87,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         supabase.from('profiles').select('*').eq('id', userId).single(),
         supabase.from('workout_sessions').select('*').order('date', { ascending: false }),
         supabase.from('routines').select('*').eq('owner_id', userId),
-        supabase.from('body_metrics').select('*').order('date', { ascending: true }),
+        supabase.from('body_metrics').select('*').eq('user_id', userId).order('date', { ascending: true }),
         supabase.from('goals').select('*').eq('user_id', userId).maybeSingle(),
-        supabase.from('profiles').select('*'),
+        supabase.rpc('public_profiles'),
       ])
 
     if (profileRes.data) setCurrentUser(mapProfile(profileRes.data))
@@ -97,7 +97,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setOwnRoutines((routinesRes.data ?? []).map(mapRoutine))
     setMetrics((metricsRes.data ?? []).map(mapMetric))
     setGoalsState(goalsRes.data ? mapGoals(goalsRes.data) : null)
-    setUsers((allProfilesRes.data ?? []).map(mapProfile))
+    if (profileRes.data?.is_admin) {
+      // Vetëm admini lexon profilet e plota (email etj.); RLS e garanton edhe në databazë.
+      const full = await supabase.from('profiles').select('*')
+      setUsers((full.data ?? []).map(mapProfile))
+    } else {
+      setUsers((allProfilesRes.data ?? []).map(mapPublicProfile))
+    }
   }, [])
 
   const clearAll = useCallback(() => {

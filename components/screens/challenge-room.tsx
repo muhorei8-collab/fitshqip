@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { ChevronLeft, Trophy, Users } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
 import { useNav } from '@/components/nav'
-import { Avatar, Card, EmptyState, Modal, SectionTitle } from '@/components/shared/ui'
+import { Card, EmptyState, Modal, SectionTitle } from '@/components/shared/ui'
+import { UserAvatar } from '@/components/shared/user-avatar'
 import { supabase } from '@/lib/supabase/client'
 import { formatVolume } from '@/lib/format'
 import {
@@ -213,6 +214,7 @@ export function ChallengeRoom({ challengeId, onBack }: { challengeId: string; on
                 showScore={showScores}
                 name={nameOf(p.userId)?.fullName ?? 'Përdorues'}
                 color={nameOf(p.userId)?.avatarColor ?? '#E5352B'}
+                avatarUrl={nameOf(p.userId)?.avatarUrl ?? null}
               />
             ))}
           </div>
@@ -335,6 +337,7 @@ function ParticipantRow({
   showScore,
   name,
   color,
+  avatarUrl,
 }: {
   p: ChallengeParticipant
   rank: number | null
@@ -345,11 +348,12 @@ function ParticipantRow({
   showScore: boolean
   name: string
   color: string
+  avatarUrl: string | null
 }) {
   return (
     <Card className={`flex items-center gap-3 py-3 ${isMe ? 'border-primary/40' : ''}`}>
       {rank !== null && <span className="w-5 text-center text-sm font-bold text-muted-foreground">{rank}</span>}
-      <Avatar name={name} color={color} size={42} />
+      <UserAvatar name={name} color={color} url={avatarUrl} size={42} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold">
           {name}

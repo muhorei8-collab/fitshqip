@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react'
 import { Flame, Weight } from 'lucide-react'
 import { ScreenHeader } from '@/components/screens/screen-header'
-import { Avatar, Card } from '@/components/shared/ui'
+import { Card } from '@/components/shared/ui'
+import { UserAvatar } from '@/components/shared/user-avatar'
 import { useApp } from '@/components/app-provider'
 import { computeStreak, weeklyVolume } from '@/lib/storage'
 import { formatVolume } from '@/lib/format'
@@ -67,7 +68,7 @@ export function LeaderboardScreen() {
               <span className="w-7 text-center text-lg font-bold">
                 {i < 3 ? medals[i] : <span className="text-muted-foreground">{i + 1}</span>}
               </span>
-              <Avatar name={row.user.fullName} color={row.user.avatarColor} />
+              <UserAvatar name={row.user.fullName} color={row.user.avatarColor} url={row.user.avatarUrl} />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold">
                   {row.user.fullName}

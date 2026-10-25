@@ -5,7 +5,8 @@ import { Check, Trophy, UserMinus, UserPlus, Users, X } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
 import { ScreenHeader } from '@/components/screens/screen-header'
 import { ChallengeRoom } from '@/components/screens/challenge-room'
-import { Avatar, Card, Chip, EmptyState, Field, Modal, SectionTitle, inputClass } from '@/components/shared/ui'
+import { Card, Chip, EmptyState, Field, Modal, SectionTitle, inputClass } from '@/components/shared/ui'
+import { UserAvatar } from '@/components/shared/user-avatar'
 import { PersonalIdCard } from '@/components/shared/personal-id-card'
 import { supabase } from '@/lib/supabase/client'
 import {
@@ -23,6 +24,7 @@ interface Person {
   full_name: string
   avatar_color: string
   level: string
+  avatar_url: string | null
 }
 interface FriendRow extends Person {
   friendship_id: string
@@ -485,7 +487,7 @@ export function FriendsScreen() {
                       on ? 'border-primary bg-primary/10' : 'border-border bg-background'
                     }`}
                   >
-                    <Avatar name={f.full_name} color={f.avatar_color} size={34} />
+                    <UserAvatar name={f.full_name} color={f.avatar_color} url={f.avatar_url} size={34} />
                     <span className="min-w-0 flex-1 truncate text-sm font-medium">{f.full_name}</span>
                     {on && <Check className="h-4 w-4 text-primary" />}
                   </button>
@@ -522,7 +524,7 @@ export function FriendsScreen() {
 function PersonInfo({ person }: { person: Person }) {
   return (
     <div className="flex min-w-0 items-center gap-3">
-      <Avatar name={person.full_name} color={person.avatar_color} size={42} />
+      <UserAvatar name={person.full_name} color={person.avatar_color} url={person.avatar_url} size={42} />
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold">{person.full_name}</p>
         <p className="truncate text-xs text-muted-foreground">

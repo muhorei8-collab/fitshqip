@@ -13,7 +13,8 @@ import {
 } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
 import { DatedLineChart } from '@/components/shared/dated-line-chart'
-import { Avatar, Card, EmptyState, Field, Modal, SectionTitle, inputClass } from '@/components/shared/ui'
+import { Card, EmptyState, Field, Modal, SectionTitle, inputClass } from '@/components/shared/ui'
+import { UserAvatar } from '@/components/shared/user-avatar'
 import { supabase } from '@/lib/supabase/client'
 import { mapMetric, mapSession } from '@/lib/supabase/mappers'
 import { fetchClientPhotos, type ProgressPhoto } from '@/lib/supabase/photos'
@@ -278,7 +279,7 @@ export function CoachOffice({ onBack }: { onBack?: () => void }) {
                     <button key={l.id} type="button" onClick={() => setSelectedId(l.id)} className="text-left">
                       <Card className="flex flex-col gap-3">
                         <div className="flex items-center gap-3">
-                          <Avatar name={l.person?.fullName ?? 'Klient'} color={l.person?.avatarColor ?? '#E5352B'} size={44} />
+                          <UserAvatar name={l.person?.fullName ?? 'Klient'} color={l.person?.avatarColor ?? '#E5352B'} url={l.person?.avatarUrl} size={44} />
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-semibold">{l.person?.fullName ?? 'Klient'}</p>
                             <p className="truncate text-xs text-muted-foreground">{l.person?.level ?? ''}</p>
@@ -325,7 +326,7 @@ export function CoachOffice({ onBack }: { onBack?: () => void }) {
               <div className="flex flex-col gap-2">
                 {pending.map((l) => (
                   <Card key={l.id} className="flex items-center gap-3 py-3">
-                    <Avatar name={l.person?.fullName ?? 'Klient'} color={l.person?.avatarColor ?? '#E5352B'} size={40} />
+                    <UserAvatar name={l.person?.fullName ?? 'Klient'} color={l.person?.avatarColor ?? '#E5352B'} url={l.person?.avatarUrl} size={40} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold">{l.person?.fullName ?? 'Klient'}</p>
                       <p className="truncate text-xs text-muted-foreground">Pret përgjigje</p>
@@ -438,7 +439,7 @@ function ClientDetail({
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <Avatar name={person?.fullName ?? 'Klient'} color={person?.avatarColor ?? '#E5352B'} size={36} />
+        <UserAvatar name={person?.fullName ?? 'Klient'} color={person?.avatarColor ?? '#E5352B'} url={person?.avatarUrl} size={36} />
         <div className="min-w-0">
           <h1 className="truncate text-lg font-bold leading-tight">{person?.fullName ?? 'Klient'}</h1>
           <p className="truncate text-xs text-muted-foreground">{person?.level ?? ''}</p>

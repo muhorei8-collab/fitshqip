@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { BadgeCheck, Camera, ChevronLeft, Dumbbell, Scale, UserCheck } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
 import { PersonalIdCard } from '@/components/shared/personal-id-card'
-import { Avatar, Card, EmptyState, Modal, SectionTitle } from '@/components/shared/ui'
+import { Card, EmptyState, Modal, SectionTitle } from '@/components/shared/ui'
+import { UserAvatar } from '@/components/shared/user-avatar'
 import { supabase } from '@/lib/supabase/client'
 import { useCoachLinks, type CoachLinkWithPerson } from '@/lib/supabase/coach'
 
@@ -253,7 +254,7 @@ function PersonRow({ link }: { link: CoachLinkWithPerson }) {
   const p = link.person
   return (
     <div className="flex min-w-0 items-center gap-3">
-      <Avatar name={p?.fullName ?? 'Trajner'} color={p?.avatarColor ?? '#E5352B'} size={44} />
+      <UserAvatar name={p?.fullName ?? 'Trajner'} color={p?.avatarColor ?? '#E5352B'} url={p?.avatarUrl} size={44} />
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold">{p?.fullName ?? 'Trajner'}</p>
         {p?.coachVerified ? (

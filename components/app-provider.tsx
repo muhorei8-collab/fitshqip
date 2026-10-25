@@ -41,7 +41,7 @@ interface AppState {
   signUp: (data: SignUpData) => Promise<{ ok: boolean; error?: string }>
   logIn: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>
   logOut: () => Promise<void>
-  updateProfile: (patch: Partial<User>) => Promise<void>
+  updateProfile: (patch: Partial<User>) => Promise<boolean>
 
   addSession: (s: Omit<WorkoutSession, 'id' | 'userId'>) => Promise<void>
   addRoutine: (name: string, description: string, exercises: Routine['exercises']) => Promise<void>
@@ -249,7 +249,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const updateProfile = useCallback(
     async (patch: Partial<User>) => {
-      if (!currentUser) return
+      if (!currentUser) return false
       const dbPatch: Record<string, unknown> = {}
       if (patch.fullName !== undefined) dbPatch.full_name = patch.fullName
       if (patch.age !== undefined) dbPatch.age = patch.age
@@ -257,6 +257,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (patch.weight !== undefined) dbPatch.weight = patch.weight
       if (patch.level !== undefined) dbPatch.level = patch.level
       if (patch.unit !== undefined) dbPatch.unit = patch.unit
+      if (patch.avatarUrl !== undefined) dbPatch.avatar_url = patch.avatarUrl
       // Note: isAdmin is deliberately never sent — the database rejects it anyway.
       const { data, error } = await supabase
         .from('profiles')
@@ -267,7 +268,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (!error && data) {
         setCurrentUser(mapProfile(data))
         setUsers((prev) => prev.map((u) => (u.id === data.id ? mapProfile(data) : u)))
+        return true
       }
+      return false
     },
     [currentUser],
   )

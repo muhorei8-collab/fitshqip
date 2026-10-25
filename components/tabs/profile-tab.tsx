@@ -215,6 +215,35 @@ export function ProfileTab() {
               ))}
             </div>
           </div>
+
+          {/* Klasifikimi: shfaqu / mos u shfaq */}
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-2 text-sm font-medium">
+              <Trophy className="h-4 w-4 text-muted-foreground" />
+              Shfaqu në klasifikim
+            </span>
+            <div className="flex gap-1 rounded-xl border border-border p-1">
+              {(
+                [
+                  [true, 'Po'],
+                  [false, 'Jo'],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => updateProfile({ showInLeaderboard: value })}
+                  className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors ${
+                    currentUser.showInLeaderboard === value
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
         </Card>
       </div>
 

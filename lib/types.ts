@@ -17,6 +17,7 @@ export interface User {
   role: Role // vendoset gjatë regjistrimit, mbrohet në DB
   coachVerified: boolean // e jep vetëm admini (manualisht te Supabase)
   avatarColor: string
+  avatarUrl: string | null // foto e profilit (bucket publik "avatars")
   createdAt: string
 }
 

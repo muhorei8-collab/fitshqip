@@ -6,6 +6,7 @@ import { useApp } from '@/components/app-provider'
 import { Card, Chip, EmptyState, Field, Modal, ProgressBar, SectionTitle, inputClass } from '@/components/shared/ui'
 import { DatedLineChart } from '@/components/shared/dated-line-chart'
 import { ProgressPhotos } from '@/components/shared/progress-photos'
+import { HistoryTab } from '@/components/tabs/history-tab'
 import { computePRs } from '@/lib/storage'
 import { displayWeight, formatVolume, kgToUnit } from '@/lib/format'
 
@@ -19,6 +20,7 @@ const RANGES = [
 
 export function ProgressTab() {
   const { currentUser, sessions, metrics, goals, addMetric, setGoals, showToast } = useApp()
+  const [view, setView] = useState<'progress' | 'history'>('progress')
   const [range, setRange] = useState(1) // 30 days
   const [weightOpen, setWeightOpen] = useState(false)
   const [goalOpen, setGoalOpen] = useState(false)
@@ -111,6 +113,30 @@ export function ProgressTab() {
         </button>
       </header>
 
+      <div className="grid grid-cols-2 gap-1 rounded-2xl border border-border bg-card p-1">
+        {(
+          [
+            ['progress', 'Progresi'],
+            ['history', 'Historia'],
+          ] as const
+        ).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setView(value)}
+            className={`rounded-xl py-2.5 text-sm font-semibold transition-colors ${
+              view === value ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {view === 'history' ? (
+        <HistoryTab embedded />
+      ) : (
+        <>
       {/* Body weight chart */}
       <Card>
         <SectionTitle>Pesha trupore</SectionTitle>
@@ -209,6 +235,9 @@ export function ProgressTab() {
           />
         )}
       </div>
+
+        </>
+      )}
 
       {/* Modals */}
       <Modal open={weightOpen} onClose={() => setWeightOpen(false)} title="Regjistro Peshën">

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Dumbbell, Play, Plus, Trash2 } from 'lucide-react'
+import { ChevronLeft, Dumbbell, Play, Plus, Trash2 } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
 import { useNav } from '@/components/nav'
 import { Card, SectionTitle } from '@/components/shared/ui'
@@ -12,7 +12,7 @@ import type { Routine } from '@/lib/types'
 
 export function WorkoutTab() {
   const { currentUser, routines, deleteRoutine, showToast } = useApp()
-  const { workoutIntent } = useNav()
+  const { workoutIntent, setTab } = useNav()
   const [active, setActive] = useState<Routine | null>(null)
   const [builderOpen, setBuilderOpen] = useState(false)
   const { programs } = useAssignedPrograms(currentUser?.id)
@@ -36,9 +36,19 @@ export function WorkoutTab() {
 
   return (
     <div className="flex flex-col gap-5 px-4 pb-28 pt-6">
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight">Stërvitja</h1>
-        <p className="text-sm text-muted-foreground">Zgjidh një rutinë për të filluar</p>
+      <header className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => setTab('dashboard')}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary"
+          aria-label="Kthehu te Kryefaqja"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Stërvitja</h1>
+          <p className="text-sm text-muted-foreground">Zgjidh një rutinë për të filluar</p>
+        </div>
       </header>
 
       <button

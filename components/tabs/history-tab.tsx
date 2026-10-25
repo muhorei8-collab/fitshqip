@@ -21,7 +21,7 @@ interface WeightEntry {
   delta: number | null // ndryshimi nga matja e mëparshme (kg)
 }
 
-export function HistoryTab() {
+export function HistoryTab({ embedded = false }: { embedded?: boolean }) {
   const { currentUser, sessions, metrics } = useApp()
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>('Të gjitha')
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -85,11 +85,13 @@ export function HistoryTab() {
   const selectedEntries = selectedDay ? (weightByDay.get(selectedDay) ?? []) : []
 
   return (
-    <div className="flex flex-col gap-5 px-4 pb-28 pt-6">
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight">Historia</h1>
-        <p className="text-sm text-muted-foreground">Stërvitjet e tua të kaluara</p>
-      </header>
+    <div className={embedded ? 'flex flex-col gap-5' : 'flex flex-col gap-5 px-4 pb-28 pt-6'}>
+      {!embedded && (
+        <header>
+          <h1 className="text-2xl font-bold tracking-tight">Historia</h1>
+          <p className="text-sm text-muted-foreground">Stërvitjet e tua të kaluara</p>
+        </header>
+      )}
 
       {/* Calendar */}
       <Card>

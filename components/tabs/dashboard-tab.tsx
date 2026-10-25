@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { BookOpen, Dumbbell, Flame, ListPlus, Scale, Sparkles, Timer, Trophy, Weight } from 'lucide-react'
+import { BookOpen, Dumbbell, Flame, Scale, Sparkles, Timer, Trophy, Weight } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
 import { useNav } from '@/components/nav'
 import { Avatar, Card, Modal, SectionTitle } from '@/components/shared/ui'
@@ -64,7 +64,7 @@ export function DashboardTab() {
   )
 
   const quickActions = [
-    { label: 'Krijo Rutinë', icon: ListPlus, onClick: () => setTab('workout') },
+    { label: 'Stërvitja', icon: Dumbbell, onClick: () => setTab('workout') },
     { label: 'Biblioteka e Ushtrimeve', icon: BookOpen, onClick: () => openScreen('library') },
     { label: 'Regjistro Peshën', icon: Scale, onClick: () => setTab('progress') },
   ]

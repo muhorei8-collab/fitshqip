@@ -23,6 +23,7 @@ export interface PersonLite {
   personalId: string
   role: Role
   coachVerified: boolean
+  avatarUrl: string | null
 }
 
 export type CoachLinkWithPerson = CoachLink & { person: PersonLite | null }
@@ -40,6 +41,7 @@ export const INVITE_MESSAGES: Record<string, { text: string; tone: Tone }> = {
   already_sent: { text: 'Ftesa është dërguar tashmë.', tone: 'info' },
   already_active: { text: 'Ky klient është tashmë i yti.', tone: 'info' },
   client_busy: { text: 'Ky përdorues ka tashmë një trajner aktiv.', tone: 'error' },
+  target_is_trainer: { text: 'Ky përdorues është trajner dhe nuk mund të jetë klient.', tone: 'error' },
   too_many_pending: { text: 'Ke shumë ftesa në pritje. Anulo disa ose prit përgjigje.', tone: 'error' },
 }
 
@@ -65,6 +67,7 @@ function mapPerson(row: any): PersonLite {
     personalId: row.personal_id ?? '',
     role: row.role === 'trainer' ? 'trainer' : 'client',
     coachVerified: !!row.coach_verified,
+    avatarUrl: row.avatar_url ?? null,
   }
 }
 

@@ -18,6 +18,7 @@ export function mapProfile(row: any): User {
     role: row.role === 'trainer' ? 'trainer' : 'client',
     coachVerified: !!row.coach_verified,
     avatarColor: row.avatar_color,
+    avatarUrl: row.avatar_url ?? null,
     createdAt: row.created_at,
   }
 }
@@ -78,6 +79,7 @@ export function mapPublicProfile(row: any): User {
     role: row.role === 'trainer' ? 'trainer' : 'client',
     coachVerified: !!row.coach_verified,
     avatarColor: row.avatar_color,
+    avatarUrl: row.avatar_url ?? null,
     createdAt: '',
   }
 }

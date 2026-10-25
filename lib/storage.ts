@@ -69,8 +69,14 @@ export function previousBest(
   return best
 }
 
+// Çelës ditor sipas orës LOKALE (toISOString përdor UTC dhe e zhvendos ditën pranë mesnatës).
+function localDayKey(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
 function dayKey(iso: string): string {
-  return new Date(iso).toISOString().slice(0, 10)
+  return localDayKey(new Date(iso))
 }
 
 // Consecutive-day streak ending today (or yesterday if not trained today).
@@ -80,11 +86,11 @@ export function computeStreak(sessions: WorkoutSession[]): number {
   let streak = 0
   const cursor = new Date()
   // allow the streak to still count if the last workout was yesterday
-  if (!days.has(cursor.toISOString().slice(0, 10))) {
+  if (!days.has(localDayKey(cursor))) {
     cursor.setDate(cursor.getDate() - 1)
-    if (!days.has(cursor.toISOString().slice(0, 10))) return 0
+    if (!days.has(localDayKey(cursor))) return 0
   }
-  while (days.has(cursor.toISOString().slice(0, 10))) {
+  while (days.has(localDayKey(cursor))) {
     streak += 1
     cursor.setDate(cursor.getDate() - 1)
   }

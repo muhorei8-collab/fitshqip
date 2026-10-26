@@ -7,20 +7,27 @@ import { useNav } from '@/components/nav'
 import { Card, SectionTitle } from '@/components/shared/ui'
 import { ActiveWorkout } from '@/components/workout/active-workout'
 import { RoutineBuilder } from '@/components/workout/routine-builder'
-import { programToRoutine, useAssignedPrograms } from '@/lib/supabase/programs'
+import { DAYS_SHORT, programToRoutine, useAssignedPrograms } from '@/lib/supabase/programs'
 import type { Routine } from '@/lib/types'
 
 export function WorkoutTab() {
   const { currentUser, routines, deleteRoutine, showToast } = useApp()
-  const { workoutIntent, setTab } = useNav()
+  const { workoutIntent, setTab, pendingRoutine, clearPendingRoutine } = useNav()
   const [active, setActive] = useState<Routine | null>(null)
   const [builderOpen, setBuilderOpen] = useState(false)
   const { programs } = useAssignedPrograms(currentUser?.id)
 
   // The dashboard CTA bumps workoutIntent to jump straight into picking a routine.
+  // Nëse Kryefaqja ka caktuar një rutinë ("Stërvitja e sotme"), e nis direkt.
   useEffect(() => {
-    if (workoutIntent > 0) setActive(null)
-  }, [workoutIntent])
+    if (pendingRoutine) {
+      setActive(pendingRoutine)
+      clearPendingRoutine()
+    } else if (workoutIntent > 0) {
+      setActive(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workoutIntent, pendingRoutine])
 
   if (active) {
     return (
@@ -69,6 +76,7 @@ export function WorkoutTab() {
                 key={p.id}
                 routine={programToRoutine(p)}
                 badge={`${p.coachName ?? 'Trajneri'} · v${p.version}`}
+                schedule={p.weekdays.length > 0 ? `Ditët: ${p.weekdays.map((d) => DAYS_SHORT[d]).join(', ')}` : undefined}
                 onStart={() => setActive(programToRoutine(p))}
               />
             ))}
@@ -114,11 +122,13 @@ function RoutineCard({
   onStart,
   onDelete,
   badge,
+  schedule,
 }: {
   routine: Routine
   onStart: () => void
   onDelete?: () => void
   badge?: string
+  schedule?: string
 }) {
   return (
     <Card className="flex flex-col gap-3">
@@ -135,6 +145,7 @@ function RoutineCard({
             )}
             <h3 className="font-semibold leading-tight">{routine.name}</h3>
             <p className="text-xs text-muted-foreground">{routine.description}</p>
+            {schedule && <p className="mt-0.5 text-xs font-medium text-success">{schedule}</p>}
             <p className="mt-1 text-xs text-muted-foreground">
               {routine.exercises.length} ushtrime
             </p>

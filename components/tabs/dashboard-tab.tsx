@@ -10,6 +10,7 @@ import { BarChart } from '@/components/shared/charts'
 import { computePRs, computeStreak, startOfWeek } from '@/lib/storage'
 import { dailyTip } from '@/lib/ai-trainer'
 import { formatDuration, formatVolume, DAYS_SQ } from '@/lib/format'
+import { DAYS_SHORT, programToRoutine, todayIndex, useAssignedPrograms } from '@/lib/supabase/programs'
 import type { Level } from '@/lib/types'
 
 // Vlerësime mesatare — varen nga stërvitja, ushqimi, gjumi dhe gjenetika.
@@ -21,8 +22,9 @@ const LEVEL_STEPS: { level: Level; toNext: string | null }[] = [
 
 export function DashboardTab() {
   const { currentUser, sessions } = useApp()
-  const { triggerWorkout, openScreen, setTab } = useNav()
+  const { triggerWorkout, openScreen, setTab, startRoutine } = useNav()
   const [aiOpen, setAiOpen] = useState(false)
+  const { programs } = useAssignedPrograms(currentUser?.id)
 
   const stats = useMemo(() => {
     const weekStart = startOfWeek()
@@ -56,6 +58,26 @@ export function DashboardTab() {
 
   const latestPR = useMemo(() => computePRs(sessions)[0] ?? null, [sessions])
   const unit = currentUser?.unit ?? 'kg'
+
+  // Plani i sotëm nga programet e caktuara nga trajneri (vetëm nëse kanë ditë të caktuara).
+  const todayPlan = useMemo(() => {
+    const scheduled = programs.filter((p) => p.weekdays.length > 0)
+    if (scheduled.length === 0) return null
+    const today = todayIndex()
+    const todays = scheduled.filter((p) => p.weekdays.includes(today))
+    const todayStr = new Date().toDateString()
+    const doneToday = (name: string) =>
+      sessions.some((s) => s.routineName === name && new Date(s.date).toDateString() === todayStr)
+    if (todays.length > 0) {
+      return { kind: 'today' as const, items: todays.map((p) => ({ program: p, done: doneToday(p.name) })) }
+    }
+    for (let ahead = 1; ahead <= 7; ahead++) {
+      const idx = (today + ahead) % 7
+      const next = scheduled.find((p) => p.weekdays.includes(idx))
+      if (next) return { kind: 'rest' as const, next, dayIndex: idx }
+    }
+    return null
+  }, [programs, sessions])
 
   if (!currentUser) return null
   const firstName = currentUser.fullName.split(' ')[0]
@@ -111,6 +133,55 @@ export function DashboardTab() {
           <span className="text-xs text-muted-foreground">Vëllim/javë</span>
         </Card>
       </div>
+
+      {/* Stërvitja e sotme (nga programi i trajnerit) */}
+      {todayPlan?.kind === 'today' && (
+        <div className="flex flex-col gap-2.5">
+          {todayPlan.items.map(({ program, done }) => (
+            <Card
+              key={program.id}
+              className="flex flex-col gap-3 border-primary/30 bg-gradient-to-br from-primary/10 to-card"
+            >
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-primary">Stërvitja e sotme</p>
+                <p className="mt-0.5 text-lg font-bold leading-tight">{program.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {program.coachName ?? 'Trajneri'} · {program.exercises.length} ushtrime
+                </p>
+              </div>
+              {done ? (
+                <div className="flex items-center justify-between rounded-xl bg-success/15 px-3 py-2.5">
+                  <span className="text-sm font-semibold text-success">✓ Kryer sot</span>
+                  <button
+                    type="button"
+                    onClick={() => startRoutine(programToRoutine(program))}
+                    className="text-xs font-semibold text-muted-foreground underline underline-offset-2"
+                  >
+                    Përsërit
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => startRoutine(programToRoutine(program))}
+                  className="rounded-xl bg-primary py-3 font-semibold text-primary-foreground transition-transform active:scale-[0.98]"
+                >
+                  Fillo stërvitjen e sotme
+                </button>
+              )}
+            </Card>
+          ))}
+        </div>
+      )}
+      {todayPlan?.kind === 'rest' && (
+        <Card className="flex flex-col gap-1">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Sot: pushim</p>
+          <p className="text-sm">
+            Stërvitja tjetër: <span className="font-semibold">{todayPlan.next.name}</span> (
+            {DAYS_SHORT[todayPlan.dayIndex]})
+          </p>
+        </Card>
+      )}
 
       {/* Main CTA */}
       <button

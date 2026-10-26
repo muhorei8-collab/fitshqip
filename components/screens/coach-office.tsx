@@ -18,7 +18,7 @@ import { UserAvatar } from '@/components/shared/user-avatar'
 import { supabase } from '@/lib/supabase/client'
 import { mapMetric, mapSession } from '@/lib/supabase/mappers'
 import { fetchClientPhotos, type ProgressPhoto } from '@/lib/supabase/photos'
-import { PROGRAM_MESSAGES, useClientPrograms, type CoachProgram } from '@/lib/supabase/programs'
+import { DAYS_SHORT, PROGRAM_MESSAGES, useClientPrograms, type CoachProgram } from '@/lib/supabase/programs'
 import { RoutineBuilder } from '@/components/workout/routine-builder'
 import { INVITE_MESSAGES, useCoachLinks, type CoachLinkWithPerson } from '@/lib/supabase/coach'
 import { formatDayShort, formatDuration, formatVolume, kgToUnit } from '@/lib/format'
@@ -631,13 +631,19 @@ function ProgramsSection({
   const active = programs.filter((p) => p.status === 'active')
   const archived = programs.filter((p) => p.status === 'archived')
 
-  async function save(name: string, description: string, exercises: RoutineExercise[]): Promise<boolean> {
+  async function save(
+    name: string,
+    description: string,
+    exercises: RoutineExercise[],
+    days: number[],
+  ): Promise<boolean> {
     const { data, error } = await supabase.rpc('assign_program', {
       p_client_id: clientId,
       p_name: name,
       p_description: description,
       p_exercises: exercises,
       p_replace_id: editing?.id ?? null,
+      p_weekdays: days,
     })
     if (error) {
       showToast(GENERIC_ERROR, 'error')
@@ -698,6 +704,7 @@ function ProgramsSection({
                   <p className="truncate text-sm font-semibold">{p.name}</p>
                   <p className="text-xs text-muted-foreground">
                     v{p.version} · {p.exercises.length} ushtrime · {fmtShort(p.createdAt)}
+                    {p.weekdays.length > 0 ? ` · ${p.weekdays.map((d) => DAYS_SHORT[d]).join(', ')}` : ''}
                   </p>
                 </div>
               </div>
@@ -742,9 +749,15 @@ function ProgramsSection({
         saveLabel={editing ? 'Ruaj versionin e ri' : 'Cakto programin'}
         initial={
           editing
-            ? { name: editing.name, description: editing.description, exercises: editing.exercises }
+            ? {
+                name: editing.name,
+                description: editing.description,
+                exercises: editing.exercises,
+                days: editing.weekdays,
+              }
             : undefined
         }
+        withDays
         onSave={save}
       />
 

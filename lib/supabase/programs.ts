@@ -13,6 +13,7 @@ export interface CoachProgram {
   exercises: RoutineExercise[]
   version: number
   status: 'active' | 'archived'
+  weekdays: number[] // 0=Hën ... 6=Die (bosh = pa ditë të caktuara)
   createdAt: string
 }
 
@@ -25,6 +26,7 @@ export const PROGRAM_MESSAGES: Record<string, string> = {
   not_linked: 'Lidhja me klientin nuk është aktive.',
   invalid_text: 'Emri (deri 80 shkronja) ose përshkrimi (deri 200) nuk është i vlefshëm.',
   invalid_exercises: 'Ushtrimet e programit nuk janë të vlefshme (1–40 ushtrime, 1–20 seri secili).',
+  invalid_days: 'Ditët e javës nuk janë të vlefshme.',
   not_found: 'Programi nuk u gjet ose është arkivuar tashmë.',
   too_many: 'Ky klient ka tashmë 20 programe aktive. Arkivo disa.',
 }
@@ -39,8 +41,16 @@ function mapProgram(row: any): CoachProgram {
     exercises: Array.isArray(row.exercises) ? row.exercises : [],
     version: row.version,
     status: row.status,
+    weekdays: Array.isArray(row.weekdays) ? row.weekdays.map(Number) : [],
     createdAt: row.created_at,
   }
+}
+
+export const DAYS_SHORT = ['Hën', 'Mar', 'Mër', 'Enj', 'Pre', 'Sht', 'Die']
+
+// Dita e sotme, me të hënën = 0 (njësoj si kudo te aplikacioni).
+export function todayIndex(d = new Date()): number {
+  return (d.getDay() + 6) % 7
 }
 
 // Programi bëhet rutinë e zakonshme, që ta nisë stërvitja ekzistuese pa ndryshime.

@@ -5,6 +5,7 @@ import { Minus, Plus, Search, Trash2 } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
 import { Field, Modal, inputClass } from '@/components/shared/ui'
 import { EXERCISES, MUSCLE_GROUPS } from '@/lib/exercises'
+import { DAYS_SHORT } from '@/lib/supabase/programs'
 import type { RoutineExercise } from '@/lib/types'
 
 interface RoutineBuilderProps {
@@ -14,8 +15,9 @@ interface RoutineBuilderProps {
   // Pa onSave, sillet si më parë dhe ruan rutinën te përdoruesi.
   title?: string
   saveLabel?: string
-  initial?: { name: string; description: string; exercises: RoutineExercise[] }
-  onSave?: (name: string, description: string, exercises: RoutineExercise[]) => Promise<boolean>
+  initial?: { name: string; description: string; exercises: RoutineExercise[]; days?: number[] }
+  withDays?: boolean // shfaq zgjedhësin e ditëve të javës (për programet e trajnerit)
+  onSave?: (name: string, description: string, exercises: RoutineExercise[], days: number[]) => Promise<boolean>
 }
 
 export function RoutineBuilder({
@@ -24,6 +26,7 @@ export function RoutineBuilder({
   title = 'Krijo Rutinë',
   saveLabel = 'Ruaj Rutinën',
   initial,
+  withDays = false,
   onSave,
 }: RoutineBuilderProps) {
   const { addRoutine, showToast } = useApp()
@@ -33,6 +36,7 @@ export function RoutineBuilder({
   const [search, setSearch] = useState('')
   const [muscle, setMuscle] = useState<string>('Të gjitha')
   const [saving, setSaving] = useState(false)
+  const [days, setDays] = useState<number[]>([])
 
   // Kur hapet me të dhëna fillestare (ndryshim programi), i mbush fushat.
   useEffect(() => {
@@ -40,6 +44,7 @@ export function RoutineBuilder({
       setName(initial.name)
       setDescription(initial.description)
       setPicked(initial.exercises.map((e) => ({ ...e })))
+      setDays(initial.days ?? [])
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
@@ -72,6 +77,7 @@ export function RoutineBuilder({
     setPicked([])
     setSearch('')
     setMuscle('Të gjitha')
+    setDays([])
   }
 
   async function save() {
@@ -85,7 +91,7 @@ export function RoutineBuilder({
     }
     if (onSave) {
       setSaving(true)
-      const ok = await onSave(name.trim(), description.trim(), picked)
+      const ok = await onSave(name.trim(), description.trim(), picked, days)
       setSaving(false)
       if (!ok) return
       reset()
@@ -117,6 +123,33 @@ export function RoutineBuilder({
             placeholder="p.sh. Biceps dhe triceps"
           />
         </Field>
+
+        {withDays && (
+          <Field label="Ditët e javës (opsionale)">
+            <div className="flex flex-wrap gap-2">
+              {DAYS_SHORT.map((label, i) => {
+                const on = days.includes(i)
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => setDays((prev) => (on ? prev.filter((d) => d !== i) : [...prev, i].sort()))}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      on
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border bg-background text-muted-foreground'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Klienti e sheh këtë stërvitje si "Stërvitja e sotme" në këto ditë.
+            </p>
+          </Field>
+        )}
 
         {picked.length > 0 && (
           <div className="rounded-2xl border border-border bg-background p-3">

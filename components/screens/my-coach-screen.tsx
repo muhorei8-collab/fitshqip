@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { BadgeCheck, Camera, ChevronLeft, Dumbbell, Scale, UserCheck } from 'lucide-react'
+import { BadgeCheck, Camera, ChevronLeft, Droplets, Dumbbell, Scale, UserCheck } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
 import { PersonalIdCard } from '@/components/shared/personal-id-card'
 import { Card, EmptyState, Modal, SectionTitle } from '@/components/shared/ui'
@@ -15,13 +15,15 @@ interface Sharing {
   weight: boolean
   workouts: boolean
   photos: boolean
+  hydration: boolean
 }
-const NO_SHARING: Sharing = { weight: false, workouts: false, photos: false }
+const NO_SHARING: Sharing = { weight: false, workouts: false, photos: false, hydration: false }
 
 const TOGGLES: { key: keyof Sharing; label: string; hint: string; icon: typeof Scale }[] = [
   { key: 'weight', label: 'Pesha', hint: 'Matjet e peshës dhe grafiku', icon: Scale },
   { key: 'workouts', label: 'Stërvitjet', hint: 'Seancat, seritë dhe vëllimi', icon: Dumbbell },
   { key: 'photos', label: 'Fotot e progresit', hint: 'Fotot që ke ngarkuar', icon: Camera },
+  { key: 'hydration', label: 'Uji', hint: 'Sasitë e ujit që shënon', icon: Droplets },
 ]
 
 export function MyCoachScreen({ onBack }: { onBack: () => void }) {
@@ -44,6 +46,7 @@ export function MyCoachScreen({ onBack }: { onBack: () => void }) {
       p_weight: s.weight,
       p_workouts: s.workouts,
       p_photos: s.photos,
+      p_hydration: s.hydration,
     })
     setBusy(null)
     if (rpcError) showToast(GENERIC_ERROR, 'error')
@@ -59,6 +62,7 @@ export function MyCoachScreen({ onBack }: { onBack: () => void }) {
       weight: link.shareWeight,
       workouts: link.shareWorkouts,
       photos: link.sharePhotos,
+      hydration: link.shareHydration,
       [key]: value,
     }
     setBusy(link.id)
@@ -67,6 +71,7 @@ export function MyCoachScreen({ onBack }: { onBack: () => void }) {
       p_weight: next.weight,
       p_workouts: next.workouts,
       p_photos: next.photos,
+      p_hydration: next.hydration,
     })
     setBusy(null)
     if (rpcError || data !== 'ok') showToast(GENERIC_ERROR, 'error')
@@ -192,7 +197,13 @@ export function MyCoachScreen({ onBack }: { onBack: () => void }) {
                       label={t.label}
                       hint={t.hint}
                       checked={
-                        t.key === 'weight' ? active.shareWeight : t.key === 'workouts' ? active.shareWorkouts : active.sharePhotos
+                        t.key === 'weight'
+                          ? active.shareWeight
+                          : t.key === 'workouts'
+                            ? active.shareWorkouts
+                            : t.key === 'photos'
+                              ? active.sharePhotos
+                              : active.shareHydration
                       }
                       disabled={busy === active.id}
                       onChange={(v) => updateSharing(active, t.key, v)}

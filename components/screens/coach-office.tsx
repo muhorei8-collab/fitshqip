@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import {
   Briefcase,
   Camera,
+  Droplets,
   ChevronLeft,
   ChevronRight,
   Dumbbell,
@@ -290,6 +291,7 @@ export function CoachOffice({ onBack }: { onBack?: () => void }) {
                           <ShareChip icon={Scale} label="Pesha" on={l.shareWeight} />
                           <ShareChip icon={Dumbbell} label="Stërvitjet" on={l.shareWorkouts} />
                           <ShareChip icon={Camera} label="Fotot" on={l.sharePhotos} />
+                          <ShareChip icon={Droplets} label="Uji" on={l.shareHydration} />
                         </div>
                         {(l.shareWeight || l.shareWorkouts) && sum && (
                           <p className="text-xs text-muted-foreground">
@@ -380,6 +382,7 @@ function ClientDetail({
   const [metrics, setMetrics] = useState<BodyMetric[]>([])
   const [sessions, setSessions] = useState<WorkoutSession[]>([])
   const [photos, setPhotos] = useState<ProgressPhoto[]>([])
+  const [waterLogs, setWaterLogs] = useState<{ amountMl: number; loggedAt: string }[]>([])
   const [viewing, setViewing] = useState<ProgressPhoto | null>(null)
   const [confirmRemove, setConfirmRemove] = useState(false)
   const [removing, setRemoving] = useState(false)
@@ -387,7 +390,10 @@ function ClientDetail({
   useEffect(() => {
     let cancelled = false
     ;(async () => {
-      const [m, s, p] = await Promise.all([
+      const waterSince = new Date()
+      waterSince.setDate(waterSince.getDate() - 6)
+      waterSince.setHours(0, 0, 0, 0)
+      const [m, s, p, w] = await Promise.all([
         link.shareWeight
           ? supabase.from('body_metrics').select('*').eq('user_id', link.clientId).order('date', { ascending: true })
           : null,
@@ -400,17 +406,25 @@ function ClientDetail({
               .limit(15)
           : null,
         link.sharePhotos ? fetchClientPhotos(link.clientId) : null,
+        link.shareHydration
+          ? supabase
+              .from('water_logs')
+              .select('amount_ml, logged_at')
+              .eq('user_id', link.clientId)
+              .gte('logged_at', waterSince.toISOString())
+          : null,
       ])
       if (cancelled) return
       setMetrics((m?.data ?? []).map(mapMetric))
       setSessions((s?.data ?? []).map(mapSession))
       setPhotos(p ?? [])
+      setWaterLogs((w?.data ?? []).map((r: any) => ({ amountMl: r.amount_ml, loggedAt: r.logged_at })))
       setLoading(false)
     })()
     return () => {
       cancelled = true
     }
-  }, [link.clientId, link.shareWeight, link.shareWorkouts, link.sharePhotos])
+  }, [link.clientId, link.shareWeight, link.shareWorkouts, link.sharePhotos, link.shareHydration])
 
   async function remove() {
     setRemoving(true)
@@ -451,6 +465,7 @@ function ClientDetail({
           <ShareChip icon={Scale} label="Pesha" on={link.shareWeight} />
           <ShareChip icon={Dumbbell} label="Stërvitjet" on={link.shareWorkouts} />
           <ShareChip icon={Camera} label="Fotot" on={link.sharePhotos} />
+          <ShareChip icon={Droplets} label="Uji" on={link.shareHydration} />
         </div>
 
         {loading ? (
@@ -522,6 +537,16 @@ function ClientDetail({
                 </Card>
               )}
             </div>
+
+            {/* Uji */}
+            <Card>
+              <SectionTitle>Uji (7 ditët e fundit)</SectionTitle>
+              {!link.shareHydration ? (
+                <LockedNote text="Klienti nuk e ndan ujin me ty." />
+              ) : (
+                <WaterWeek logs={waterLogs} />
+              )}
+            </Card>
 
             {/* Fotot */}
             <Card>
@@ -784,5 +809,41 @@ function ProgramsSection({
         </div>
       </Modal>
     </Card>
+  )
+}
+
+// Totalet ditore të ujit për 7 ditët e fundit (dita sipas orës lokale të pajisjes tënde).
+function WaterWeek({ logs }: { logs: { amountMl: number; loggedAt: string }[] }) {
+  const key = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  const totals: Record<string, number> = {}
+  for (const l of logs) {
+    const k = key(new Date(l.loggedAt))
+    totals[k] = (totals[k] ?? 0) + l.amountMl
+  }
+  const labels = ['Die', 'Hën', 'Mar', 'Mër', 'Enj', 'Pre', 'Sht']
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date()
+    d.setDate(d.getDate() - (6 - i))
+    return { label: labels[d.getDay()], total: totals[key(d)] ?? 0 }
+  })
+  const max = Math.max(1, ...days.map((d) => d.total))
+  if (logs.length === 0) {
+    return <p className="py-4 text-center text-sm text-muted-foreground">Klienti nuk ka shënuar ujë këtë javë.</p>
+  }
+  return (
+    <div className="flex h-28 items-end gap-1.5">
+      {days.map((d, i) => (
+        <div key={i} className="flex flex-1 flex-col items-center gap-1">
+          <span className="text-[10px] font-medium text-muted-foreground">{d.total > 0 ? d.total : ''}</span>
+          <div className="flex h-16 w-full items-end">
+            <div
+              className="w-full rounded-md bg-primary/60"
+              style={{ height: `${Math.max(d.total > 0 ? 6 : 0, (d.total / max) * 100)}%` }}
+            />
+          </div>
+          <span className="text-[10px] text-muted-foreground">{d.label}</span>
+        </div>
+      ))}
+    </div>
   )
 }

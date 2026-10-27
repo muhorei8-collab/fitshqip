@@ -259,6 +259,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (patch.unit !== undefined) dbPatch.unit = patch.unit
       if (patch.avatarUrl !== undefined) dbPatch.avatar_url = patch.avatarUrl
       if (patch.showInLeaderboard !== undefined) dbPatch.leaderboard_visible = patch.showInLeaderboard
+      if (patch.waterGoalMl !== undefined) dbPatch.water_goal_ml = patch.waterGoalMl
       // Note: isAdmin is deliberately never sent — the database rejects it anyway.
       const { data, error } = await supabase
         .from('profiles')
@@ -353,6 +354,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       supabase.from('routines').delete().eq('owner_id', currentUser.id),
       supabase.from('body_metrics').delete().eq('user_id', currentUser.id),
       supabase.from('goals').delete().eq('user_id', currentUser.id),
+      supabase.from('water_logs').delete().eq('user_id', currentUser.id),
       deleteAllMyPhotos(currentUser.id),
     ])
     setAllSessions((prev) => prev.filter((s) => s.userId !== currentUser.id))

@@ -1,5 +1,5 @@
 // Versioni i kushteve. Ndrysho datën kur përditëson tekstin më poshtë.
-export const TERMS_VERSION = '2026-10-24'
+export const TERMS_VERSION = '2026-10-25'
 
 const h = 'mt-4 text-sm font-semibold text-foreground first:mt-0'
 const p = 'mt-1 text-sm leading-relaxed text-muted-foreground text-pretty'
@@ -33,7 +33,7 @@ export function TermsContent() {
         aplikacioni të funksionojë. Nuk i shesim të dhënat e tua. Kur përdor funksione sociale (miqtë, klasifikimi),
         pjesë të të dhënave të stërvitjes mund t’u shfaqen përdoruesve të tjerë brenda aplikacionit. Fotot e
         progresit që ngarkon ruhen private dhe nuk u shfaqen përdoruesve të tjerë. Stërvitjet, matjet, objektivat dhe
-        fotot mund t’i fshish nga Profili → Rivendos të dhënat. Kur lidhesh me një trajner, ai sheh vetëm peshën, stërvitjet dhe fotot që ti ke lejuar veçmas, dhe mund t’i heqësh lejet ose ta shkëputësh trajnerin kurdo.
+        fotot mund t’i fshish nga Profili → Rivendos të dhënat. Kur lidhesh me një trajner, ai sheh vetëm peshën, stërvitjet, fotot dhe ujin që ti ke lejuar veçmas, dhe mund t’i heqësh lejet ose ta shkëputësh trajnerin kurdo.
       </p>
 
       <h3 className={h}>5. Shëndeti</h3>

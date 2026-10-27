@@ -15,6 +15,7 @@ export interface User {
   unit: Unit
   isAdmin: boolean
   showInLeaderboard: boolean // nëse shfaqet te Klasifikimi
+  waterGoalMl: number // synimi ditor i ujit (ml)
   role: Role // vendoset gjatë regjistrimit, mbrohet në DB
   coachVerified: boolean // e jep vetëm admini (manualisht te Supabase)
   avatarColor: string

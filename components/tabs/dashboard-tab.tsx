@@ -6,6 +6,7 @@ import { useApp } from '@/components/app-provider'
 import { useNav } from '@/components/nav'
 import { Card, Modal, SectionTitle } from '@/components/shared/ui'
 import { UserAvatar } from '@/components/shared/user-avatar'
+import { WaterCard } from '@/components/shared/water-card'
 import { BarChart } from '@/components/shared/charts'
 import { computePRs, computeStreak, startOfWeek } from '@/lib/storage'
 import { dailyTip } from '@/lib/ai-trainer'
@@ -191,6 +192,8 @@ export function DashboardTab() {
       >
         🔥 Fillo Stërvitjen
       </button>
+
+      <WaterCard />
 
       {/* Quick actions */}
       <div>

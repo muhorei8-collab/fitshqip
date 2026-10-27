@@ -12,6 +12,7 @@ export interface CoachLink {
   shareWeight: boolean
   shareWorkouts: boolean
   sharePhotos: boolean
+  shareHydration: boolean
   createdAt: string
 }
 
@@ -54,6 +55,7 @@ function mapLink(row: any): CoachLink {
     shareWeight: !!row.share_weight,
     shareWorkouts: !!row.share_workouts,
     sharePhotos: !!row.share_photos,
+    shareHydration: !!row.share_hydration,
     createdAt: row.created_at,
   }
 }

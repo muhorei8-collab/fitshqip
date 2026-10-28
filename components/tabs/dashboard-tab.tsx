@@ -7,6 +7,7 @@ import { useNav } from '@/components/nav'
 import { Card, Modal, SectionTitle } from '@/components/shared/ui'
 import { UserAvatar } from '@/components/shared/user-avatar'
 import { WaterCard } from '@/components/shared/water-card'
+import { CheckinPrompt } from '@/components/shared/checkin-form'
 import { BarChart } from '@/components/shared/charts'
 import { computePRs, computeStreak, startOfWeek } from '@/lib/storage'
 import { dailyTip } from '@/lib/ai-trainer'
@@ -134,6 +135,8 @@ export function DashboardTab() {
           <span className="text-xs text-muted-foreground">Vëllim/javë</span>
         </Card>
       </div>
+
+      <CheckinPrompt />
 
       {/* Stërvitja e sotme (nga programi i trajnerit) */}
       {todayPlan?.kind === 'today' && (

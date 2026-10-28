@@ -6,6 +6,8 @@ import { useApp } from '@/components/app-provider'
 import { PersonalIdCard } from '@/components/shared/personal-id-card'
 import { Card, EmptyState, Modal, SectionTitle } from '@/components/shared/ui'
 import { UserAvatar } from '@/components/shared/user-avatar'
+import { CheckinForm } from '@/components/shared/checkin-form'
+import { useMyCheckins, weekLabel } from '@/lib/supabase/checkins'
 import { supabase } from '@/lib/supabase/client'
 import { useCoachLinks, type CoachLinkWithPerson } from '@/lib/supabase/coach'
 
@@ -232,6 +234,8 @@ export function MyCoachScreen({ onBack }: { onBack: () => void }) {
               </>
             )
           )}
+
+          <CheckinsSection hasActive={!!active} />
         </div>
       )}
 
@@ -317,5 +321,63 @@ function ShareToggle({
         <span className={`h-4 w-4 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-4' : ''}`} />
       </span>
     </button>
+  )
+}
+
+function CheckinsSection({ hasActive }: { hasActive: boolean }) {
+  const { currentUser } = useApp()
+  const { checkins, thisWeek, reload } = useMyCheckins(currentUser?.id)
+  const [open, setOpen] = useState(false)
+
+  if (!hasActive && checkins.length === 0) return null
+  const canEdit = hasActive && !thisWeek?.reviewedAt
+
+  return (
+    <div>
+      <SectionTitle
+        action={
+          canEdit ? (
+            <button type="button" onClick={() => setOpen(true)} className="text-sm font-medium text-primary">
+              {thisWeek ? 'Ndrysho' : 'Dërgo check-in'}
+            </button>
+          ) : undefined
+        }
+      >
+        Check-in-et e mia
+      </SectionTitle>
+      {checkins.length === 0 ? (
+        <p className="rounded-2xl border border-dashed border-border px-4 py-5 text-center text-sm text-muted-foreground">
+          Ende pa check-in. Dërgo të parin që trajneri të shohë si po shkon java jote.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-2.5">
+          {checkins.slice(0, 8).map((c) => (
+            <Card key={c.id} className="flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold">{weekLabel(c.weekStart)}</p>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                    c.reviewedAt ? 'bg-success/15 text-success' : 'bg-secondary text-muted-foreground'
+                  }`}
+                >
+                  {c.reviewedAt ? 'U përgjigj' : 'Pret përgjigjen'}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Energjia {c.energy}/5 · Gjumi {c.sleep}/5 · Plani {c.adherence}/5
+              </p>
+              {c.note && <p className="text-sm text-pretty">{c.note}</p>}
+              {c.reviewedAt && (
+                <div className="rounded-xl bg-secondary px-3 py-2">
+                  <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Trajneri</p>
+                  <p className="text-sm text-pretty">{c.feedback || 'Pa koment.'}</p>
+                </div>
+              )}
+            </Card>
+          ))}
+        </div>
+      )}
+      <CheckinForm open={open} onClose={() => setOpen(false)} initial={thisWeek} onSent={reload} />
+    </div>
   )
 }

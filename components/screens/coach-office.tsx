@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import {
   Briefcase,
   Camera,
+  ClipboardCheck,
   Droplets,
   ChevronLeft,
   ChevronRight,
@@ -21,6 +22,8 @@ import { mapMetric, mapSession } from '@/lib/supabase/mappers'
 import { fetchClientPhotos, type ProgressPhoto } from '@/lib/supabase/photos'
 import { DAYS_SHORT, PROGRAM_MESSAGES, useClientPrograms, type CoachProgram } from '@/lib/supabase/programs'
 import { RoutineBuilder } from '@/components/workout/routine-builder'
+import { CheckinReview } from '@/components/screens/checkin-review'
+import { useCoachCheckins, weekLabel, type Checkin } from '@/lib/supabase/checkins'
 import { INVITE_MESSAGES, useCoachLinks, type CoachLinkWithPerson } from '@/lib/supabase/coach'
 import { formatDayShort, formatDuration, formatVolume, kgToUnit } from '@/lib/format'
 import { startOfWeek } from '@/lib/storage'
@@ -114,6 +117,10 @@ export function CoachOffice({ onBack }: { onBack?: () => void }) {
   const active = links.filter((l) => l.status === 'active')
   const pending = links.filter((l) => l.status === 'pending')
   const summaries = useClientSummaries(active)
+  const { checkins, reload: reloadCheckins } = useCoachCheckins(currentUser?.id)
+  const [reviewing, setReviewing] = useState<Checkin | null>(null)
+  const clientOf = (clientId: string) => active.find((l) => l.clientId === clientId)
+  const pendingCheckins = checkins.filter((c) => !c.reviewedAt && !!clientOf(c.clientId))
   const selected = active.find((l) => l.id === selectedId) ?? null
 
   async function sendInvite(e: React.FormEvent) {
@@ -184,6 +191,15 @@ export function CoachOffice({ onBack }: { onBack?: () => void }) {
 
   return (
     <div className="min-h-dvh pb-28">
+      <CheckinReview
+        checkin={reviewing}
+        clientName={reviewing ? (clientOf(reviewing.clientId)?.person?.fullName ?? 'Klient') : ''}
+        onClose={() => setReviewing(null)}
+        onSaved={() => {
+          setReviewing(null)
+          reloadCheckins()
+        }}
+      />
       <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
         {onBack && (
           <button
@@ -233,7 +249,7 @@ export function CoachOffice({ onBack }: { onBack?: () => void }) {
             </Card>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <Card className="p-3.5 text-center">
               <p className="text-2xl font-black">{active.length}</p>
               <p className="text-xs text-muted-foreground">Klientë aktivë</p>
@@ -242,7 +258,47 @@ export function CoachOffice({ onBack }: { onBack?: () => void }) {
               <p className="text-2xl font-black">{pending.length}</p>
               <p className="text-xs text-muted-foreground">Ftesa në pritje</p>
             </Card>
+            <Card className="p-3.5 text-center">
+              <p className={`text-2xl font-black ${pendingCheckins.length > 0 ? 'text-primary' : ''}`}>
+                {pendingCheckins.length}
+              </p>
+              <p className="text-xs text-muted-foreground">Check-in për shqyrtim</p>
+            </Card>
           </div>
+
+          {/* Check-in për shqyrtim */}
+          {pendingCheckins.length > 0 && (
+            <div>
+              <SectionTitle>Check-in për shqyrtim ({pendingCheckins.length})</SectionTitle>
+              <div className="flex flex-col gap-2.5">
+                {pendingCheckins.map((c) => {
+                  const l = clientOf(c.clientId)
+                  return (
+                    <button key={c.id} type="button" onClick={() => setReviewing(c)} className="text-left">
+                      <Card className="flex flex-col gap-2 border-primary/30">
+                        <div className="flex items-center gap-3">
+                          <UserAvatar
+                            name={l?.person?.fullName ?? 'Klient'}
+                            color={l?.person?.avatarColor ?? '#E5352B'}
+                            url={l?.person?.avatarUrl}
+                            size={38}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold">{l?.person?.fullName ?? 'Klient'}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {weekLabel(c.weekStart)} · Energjia {c.energy}/5 · Gjumi {c.sleep}/5 · Plani {c.adherence}/5
+                            </p>
+                          </div>
+                          <ClipboardCheck className="h-4 w-4 shrink-0 text-primary" />
+                        </div>
+                        {c.note && <p className="line-clamp-2 text-xs text-muted-foreground">{c.note}</p>}
+                      </Card>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Fto klient */}
           <Card>
@@ -383,6 +439,9 @@ function ClientDetail({
   const [sessions, setSessions] = useState<WorkoutSession[]>([])
   const [photos, setPhotos] = useState<ProgressPhoto[]>([])
   const [waterLogs, setWaterLogs] = useState<{ amountMl: number; loggedAt: string }[]>([])
+  const { checkins: allCheckins, reload: reloadCheckins } = useCoachCheckins(currentUser?.id)
+  const [reviewing, setReviewing] = useState<Checkin | null>(null)
+  const clientCheckins = allCheckins.filter((c) => c.clientId === link.clientId)
   const [viewing, setViewing] = useState<ProgressPhoto | null>(null)
   const [confirmRemove, setConfirmRemove] = useState(false)
   const [removing, setRemoving] = useState(false)
@@ -538,6 +597,39 @@ function ClientDetail({
               )}
             </div>
 
+            {/* Check-in-et */}
+            <Card>
+              <SectionTitle>Check-in-et</SectionTitle>
+              {clientCheckins.length === 0 ? (
+                <p className="py-3 text-center text-sm text-muted-foreground">Klienti nuk ka dërguar check-in ende.</p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {clientCheckins.slice(0, 8).map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setReviewing(c)}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-border bg-background px-3 py-2.5 text-left"
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold">{weekLabel(c.weekStart)}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          Energjia {c.energy}/5 · Gjumi {c.sleep}/5 · Plani {c.adherence}/5
+                        </span>
+                      </span>
+                      <span
+                        className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                          c.reviewedAt ? 'bg-success/15 text-success' : 'bg-primary/15 text-primary'
+                        }`}
+                      >
+                        {c.reviewedAt ? 'U përgjigj' : 'Për shqyrtim'}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </Card>
+
             {/* Uji */}
             <Card>
               <SectionTitle>Uji (7 ditët e fundit)</SectionTitle>
@@ -588,6 +680,16 @@ function ClientDetail({
           </>
         )}
       </div>
+
+      <CheckinReview
+        checkin={reviewing}
+        clientName={person?.fullName ?? 'Klient'}
+        onClose={() => setReviewing(null)}
+        onSaved={() => {
+          setReviewing(null)
+          reloadCheckins()
+        }}
+      />
 
       <Modal open={!!viewing} onClose={() => setViewing(null)} title={viewing ? fmtShort(viewing.takenAt) : undefined}>
         {viewing && (

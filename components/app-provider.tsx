@@ -193,6 +193,41 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [currentUser?.id, showToast])
 
+  // Check-in javor: trajneri njoftohet kur vjen/përditësohet një; klienti kur merr përgjigje.
+  useEffect(() => {
+    const uid = currentUser?.id
+    if (!uid) return
+    const rand = Math.random().toString(36).slice(2, 8)
+    const asCoach = supabase
+      .channel(`checkins-coach-${uid}-${rand}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'checkins', filter: `coach_id=eq.${uid}` },
+        (payload) => {
+          const row = payload.new as { reviewed_at?: string | null }
+          if (payload.eventType === 'INSERT') showToast('Një klient dërgoi check-in javor. Shiko Zyrën.', 'info')
+          else if (payload.eventType === 'UPDATE' && !row.reviewed_at)
+            showToast('Një klient përditësoi check-in-in e javës.', 'info')
+        },
+      )
+      .subscribe()
+    const asClient = supabase
+      .channel(`checkins-client-${uid}-${rand}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'checkins', filter: `client_id=eq.${uid}` },
+        (payload) => {
+          const row = payload.new as { reviewed_at?: string | null }
+          if (row.reviewed_at) showToast('Trajneri t’u përgjigj check-in-it. Shiko Kryefaqen.', 'info')
+        },
+      )
+      .subscribe()
+    return () => {
+      supabase.removeChannel(asCoach)
+      supabase.removeChannel(asClient)
+    }
+  }, [currentUser?.id, showToast])
+
   const sessions = useMemo(
     () => allSessions.filter((s) => s.userId === currentUser?.id),
     [allSessions, currentUser],
@@ -355,6 +390,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       supabase.from('body_metrics').delete().eq('user_id', currentUser.id),
       supabase.from('goals').delete().eq('user_id', currentUser.id),
       supabase.from('water_logs').delete().eq('user_id', currentUser.id),
+      supabase.from('checkins').delete().eq('client_id', currentUser.id),
       deleteAllMyPhotos(currentUser.id),
     ])
     setAllSessions((prev) => prev.filter((s) => s.userId !== currentUser.id))

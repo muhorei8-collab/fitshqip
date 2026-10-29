@@ -3,6 +3,7 @@
 import { AppProvider, useApp } from '@/components/app-provider'
 import { NavProvider, useNav } from '@/components/nav'
 import { BottomNav } from '@/components/bottom-nav'
+import { DesktopSidebar } from '@/components/desktop-sidebar'
 import { ToastHost } from '@/components/shared/toast'
 import { AuthScreen } from '@/components/auth/auth-screen'
 import { DashboardTab } from '@/components/tabs/dashboard-tab'
@@ -47,6 +48,24 @@ function Router() {
   }
 }
 
+// Kornizat e faqes. Klienti mbetet një kolonë e ngushtë (e menduar për telefon). Trajneri në desktop
+// (lg e lart) merr navigim anësor, dhe Zyra përdor gjerësinë e plotë.
+function Frame({ children }: { children: React.ReactNode }) {
+  const { currentUser } = useApp()
+  const { tab, screen } = useNav()
+  const isTrainer = currentUser?.role === 'trainer'
+  const wide = isTrainer && tab === 'office' && !screen
+
+  return (
+    <div className={isTrainer ? 'lg:flex' : ''}>
+      {isTrainer && <DesktopSidebar />}
+      <div className={isTrainer ? 'min-w-0 lg:flex-1' : ''}>
+        <main className={`mx-auto min-h-dvh ${wide ? 'max-w-md lg:max-w-none' : 'max-w-md'}`}>{children}</main>
+      </div>
+    </div>
+  )
+}
+
 function Shell() {
   const { ready, currentUser } = useApp()
 
@@ -69,9 +88,9 @@ function Shell() {
 
   return (
     <NavProvider>
-      <main className="mx-auto min-h-dvh max-w-md">
+      <Frame>
         <Router />
-      </main>
+      </Frame>
       <BottomNav />
       <ToastHost />
     </NavProvider>

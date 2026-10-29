@@ -21,7 +21,12 @@ export function BottomNav() {
   const tabs = TABS.filter((t) => t.id !== 'office' || currentUser?.role === 'trainer')
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/90 backdrop-blur-lg">
+    <nav
+      className={cn(
+        'fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/90 backdrop-blur-lg',
+        currentUser?.role === 'trainer' && 'lg:hidden',
+      )}
+    >
       <div className="mx-auto flex max-w-md items-stretch justify-between px-2 pb-[env(safe-area-inset-bottom)]">
         {tabs.map((t) => {
           // Stërvitja hapet nga Kryefaqja, ndaj aty mbetet i ndezur "Kryefaqja".

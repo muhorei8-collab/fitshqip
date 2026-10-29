@@ -176,20 +176,24 @@ export function CoachOffice({ onBack }: { onBack?: () => void }) {
     )
   }
 
-  if (selected) {
-    return (
-      <ClientDetail
-        link={selected}
-        onBack={() => setSelectedId(null)}
-        onRemoved={() => {
-          setSelectedId(null)
-          reload()
-        }}
-      />
-    )
-  }
+  // Në telefon: ose lista, ose detaji. Në desktop (lg): të dyja krah për krah.
+  const detail = selected ? (
+    <ClientDetail
+      key={selected.id}
+      link={selected}
+      onBack={() => setSelectedId(null)}
+      onRemoved={() => {
+        setSelectedId(null)
+        reload()
+      }}
+    />
+  ) : null
 
   return (
+    <div className="lg:grid lg:grid-cols-[400px_1fr]">
+      <div
+        className={`${selected ? 'hidden lg:block' : ''} lg:h-dvh lg:overflow-y-auto lg:border-r lg:border-border`}
+      >
     <div className="min-h-dvh pb-28">
       <CheckinReview
         checkin={reviewing}
@@ -405,6 +409,18 @@ export function CoachOffice({ onBack }: { onBack?: () => void }) {
         </div>
       )}
     </div>
+      </div>
+
+      <div className={`${selected ? '' : 'hidden lg:block'} lg:h-dvh lg:overflow-y-auto`}>
+        {detail ?? (
+          <div className="flex min-h-dvh items-center justify-center px-8 text-center text-sm text-muted-foreground">
+            <p className="max-w-xs text-pretty">
+              Zgjidh një klient nga lista për të parë progresin, programet, check-in-et dhe lejet e tij.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -507,7 +523,7 @@ function ClientDetail({
         <button
           type="button"
           onClick={onBack}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary lg:hidden"
           aria-label="Kthehu"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -519,7 +535,7 @@ function ClientDetail({
         </div>
       </header>
 
-      <div className="flex flex-col gap-5 px-4 pt-4">
+      <div className="flex flex-col gap-5 px-4 pt-4 lg:mx-auto lg:max-w-3xl lg:px-8 lg:pt-6">
         <div className="flex flex-wrap gap-1.5">
           <ShareChip icon={Scale} label="Pesha" on={link.shareWeight} />
           <ShareChip icon={Dumbbell} label="Stërvitjet" on={link.shareWorkouts} />

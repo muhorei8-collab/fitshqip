@@ -19,6 +19,7 @@ export function BottomNav() {
   const { currentUser } = useApp()
   // "Zyra" shfaqet vetëm për trajnerët; kontrolli i vërtetë është në databazë, jo këtu.
   const tabs = TABS.filter((t) => t.id !== 'office' || currentUser?.role === 'trainer')
+  const labelOf = (id: Tab, label: string) => (id === 'dashboard' && currentUser?.role === 'trainer' ? 'Pasqyra' : label)
 
   return (
     <nav
@@ -72,7 +73,7 @@ export function BottomNav() {
                   active ? 'text-primary' : 'text-muted-foreground',
                 )}
               >
-                {t.label}
+                {labelOf(t.id, t.label)}
               </span>
             </button>
           )

@@ -18,9 +18,11 @@ import { MacroScreen } from '@/components/screens/macro-screen'
 import { AdminScreen } from '@/components/screens/admin-screen'
 import { FriendsScreen } from '@/components/screens/friends-screen'
 import { CoachOffice } from '@/components/screens/coach-office'
+import { TrainerOverview } from '@/components/tabs/trainer-overview'
 
 function Router() {
   const { tab, screen } = useNav()
+  const { currentUser } = useApp()
 
   if (screen === 'library') return <LibraryScreen />
   if (screen === 'leaderboard') return <LeaderboardScreen />
@@ -30,7 +32,8 @@ function Router() {
 
   switch (tab) {
     case 'dashboard':
-      return <DashboardTab />
+      // Trajneri e ka Pasqyrën (pa vegla personale të klientit); klienti Kryefaqen e zakonshme.
+      return currentUser?.role === 'trainer' ? <TrainerOverview /> : <DashboardTab />
     case 'workout':
       return <WorkoutTab />
     case 'progress':
@@ -55,12 +58,19 @@ function Frame({ children }: { children: React.ReactNode }) {
   const { tab, screen } = useNav()
   const isTrainer = currentUser?.role === 'trainer'
   const wide = isTrainer && tab === 'office' && !screen
+  const overview = isTrainer && tab === 'dashboard' && !screen
 
   return (
     <div className={isTrainer ? 'lg:flex' : ''}>
       {isTrainer && <DesktopSidebar />}
       <div className={isTrainer ? 'min-w-0 lg:flex-1' : ''}>
-        <main className={`mx-auto min-h-dvh ${wide ? 'max-w-md lg:max-w-none' : 'max-w-md'}`}>{children}</main>
+        <main
+          className={`mx-auto min-h-dvh ${
+            wide ? 'max-w-md lg:max-w-none' : overview ? 'max-w-md lg:max-w-6xl' : 'max-w-md'
+          }`}
+        >
+          {children}
+        </main>
       </div>
     </div>
   )

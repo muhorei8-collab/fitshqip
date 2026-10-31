@@ -7,7 +7,7 @@ import { UserAvatar } from '@/components/shared/user-avatar'
 import { cn } from '@/lib/utils'
 
 const ITEMS: { id: Tab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { id: 'dashboard', label: 'Kryefaqja', icon: Home },
+  { id: 'dashboard', label: 'Pasqyra', icon: Home },
   { id: 'progress', label: 'Progresi', icon: TrendingUp },
   { id: 'office', label: 'Zyra', icon: Briefcase },
   { id: 'marketplace', label: 'Dyqani', icon: ShoppingBag },

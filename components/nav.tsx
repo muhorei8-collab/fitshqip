@@ -18,6 +18,12 @@ interface NavState {
   pendingRoutine: Routine | null
   startRoutine: (r: Routine) => void
   clearPendingRoutine: () => void
+  // Hap Zyrën me një klient të zgjedhur (p.sh. nga pasqyra e trajnerit).
+  officeClientId: string | null
+  openOfficeClient: (clientId: string, opts?: { newProgram?: boolean }) => void
+  clearOfficeClient: () => void
+  officeNewProgram: boolean // hap ndërtuesin e programit sapo hapet klienti
+  clearOfficeNewProgram: () => void
 }
 
 const NavCtx = createContext<NavState | null>(null)
@@ -33,6 +39,8 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
   const [screen, setScreen] = useState<Screen>(null)
   const [workoutIntent, setWorkoutIntent] = useState(0)
   const [pendingRoutine, setPendingRoutine] = useState<Routine | null>(null)
+  const [officeClientId, setOfficeClientId] = useState<string | null>(null)
+  const [officeNewProgram, setOfficeNewProgram] = useState(false)
 
   const value: NavState = {
     tab,
@@ -57,6 +65,16 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
       setWorkoutIntent((n) => n + 1)
     },
     clearPendingRoutine: () => setPendingRoutine(null),
+    officeClientId,
+    openOfficeClient: (clientId, opts) => {
+      setScreen(null)
+      setOfficeClientId(clientId)
+      setOfficeNewProgram(!!opts?.newProgram)
+      setTab('office')
+    },
+    clearOfficeClient: () => setOfficeClientId(null),
+    officeNewProgram,
+    clearOfficeNewProgram: () => setOfficeNewProgram(false),
   }
 
   return <NavCtx.Provider value={value}>{children}</NavCtx.Provider>

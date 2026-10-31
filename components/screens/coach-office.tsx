@@ -23,6 +23,7 @@ import { fetchClientPhotos, type ProgressPhoto } from '@/lib/supabase/photos'
 import { DAYS_SHORT, PROGRAM_MESSAGES, useClientPrograms, type CoachProgram } from '@/lib/supabase/programs'
 import { RoutineBuilder } from '@/components/workout/routine-builder'
 import { CheckinReview } from '@/components/screens/checkin-review'
+import { useNav } from '@/components/nav'
 import { useCoachCheckins, weekLabel, type Checkin } from '@/lib/supabase/checkins'
 import { INVITE_MESSAGES, useCoachLinks, type CoachLinkWithPerson } from '@/lib/supabase/coach'
 import { formatDayShort, formatDuration, formatVolume, kgToUnit } from '@/lib/format'
@@ -121,6 +122,17 @@ export function CoachOffice({ onBack }: { onBack?: () => void }) {
   const [reviewing, setReviewing] = useState<Checkin | null>(null)
   const clientOf = (clientId: string) => active.find((l) => l.clientId === clientId)
   const pendingCheckins = checkins.filter((c) => !c.reviewedAt && !!clientOf(c.clientId))
+
+  // Nga Pasqyra: hap direkt klientin e prekur.
+  const { officeClientId, clearOfficeClient, clearOfficeNewProgram } = useNav()
+  useEffect(() => {
+    if (!officeClientId || loading) return
+    const target = links.find((l) => l.clientId === officeClientId && l.status === 'active')
+    if (target) setSelectedId(target.id)
+    else clearOfficeNewProgram()
+    clearOfficeClient()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [officeClientId, loading, links])
   const selected = active.find((l) => l.id === selectedId) ?? null
 
   async function sendInvite(e: React.FormEvent) {
@@ -773,6 +785,17 @@ function ProgramsSection({
 
   const active = programs.filter((p) => p.status === 'active')
   const archived = programs.filter((p) => p.status === 'archived')
+
+  // Nga Pasqyra ("Program i ri"): hap ndërtuesin direkt për këtë klient.
+  const { officeNewProgram, clearOfficeNewProgram } = useNav()
+  useEffect(() => {
+    if (officeNewProgram) {
+      setEditing(null)
+      setBuilderOpen(true)
+      clearOfficeNewProgram()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [officeNewProgram])
 
   async function save(
     name: string,

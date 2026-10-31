@@ -175,3 +175,25 @@ export async function fetchClientPhotos(clientId: string): Promise<ProgressPhoto
   }
   return rows.map((r) => ({ ...r, url: urls.get(r.path) ?? '', thumbUrl: urls.get(r.thumbPath) ?? '' }))
 }
+
+// Për pasqyrën e trajnerit: fotot më të fundit të klientëve që i ndajnë (RLS kthen vetëm të lejuarat).
+export async function fetchRecentClientPhotos(clientIds: string[], limit = 6): Promise<ProgressPhoto[]> {
+  if (clientIds.length === 0) return []
+  const { data, error } = await supabase
+    .from('progress_photos')
+    .select('*')
+    .in('user_id', clientIds)
+    .order('taken_at', { ascending: false })
+    .limit(limit)
+  if (error || !data) return []
+  const rows = data.map(mapPhoto)
+  const urls = new Map<string, string>()
+  const paths = rows.map((r) => r.thumbPath)
+  if (paths.length > 0) {
+    const { data: signed } = await supabase.storage.from(PHOTO_BUCKET).createSignedUrls(paths, 3600)
+    signed?.forEach((s) => {
+      if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl)
+    })
+  }
+  return rows.map((r) => ({ ...r, thumbUrl: urls.get(r.thumbPath) ?? '' }))
+}

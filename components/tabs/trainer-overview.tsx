@@ -7,6 +7,8 @@ import { useNav } from '@/components/nav'
 import { CheckinReview } from '@/components/screens/checkin-review'
 import { Card, EmptyState, Modal, SectionTitle } from '@/components/shared/ui'
 import { UserAvatar } from '@/components/shared/user-avatar'
+import { WaterCard } from '@/components/shared/water-card'
+import { CaloriesAiCard } from '@/components/shared/calories-ai-card'
 import { supabase } from '@/lib/supabase/client'
 import { useCoachLinks } from '@/lib/supabase/coach'
 import { useCoachCheckins, weekLabel, type Checkin } from '@/lib/supabase/checkins'
@@ -259,6 +261,15 @@ export function TrainerOverview() {
             </button>
           )
         })}
+      </div>
+
+      {/* Të miat (personale): ujë dhe kalori të trajnerit, të ndara plotësisht nga të dhënat e klientëve */}
+      <div>
+        <SectionTitle>Të miat (personale)</SectionTitle>
+        <div className="grid gap-3 lg:grid-cols-2 lg:items-start">
+          <WaterCard />
+          <CaloriesAiCard />
+        </div>
       </div>
 
       {!linksLoading && active.length === 0 ? (

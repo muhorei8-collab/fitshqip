@@ -84,5 +84,6 @@ export interface PersonalRecord {
 export interface Exercise {
   name: string
   muscle: string
+  subgroup?: string // p.sh. deltoidi anterior/lateral/posterior për kategorinë Supet
   instructions: string
 }

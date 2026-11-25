@@ -1,10 +1,12 @@
 import type { Exercise, Routine } from './types'
 import { V2_EXERCISES } from './exercises-v2'
+import { V3_EXERCISES } from './exercises-v3'
 
 export const MUSCLE_GROUPS = [
   'Gjoks',
   'Shpinë',
   'Shpatulla',
+  'Supet',
   'Biceps',
   'Triceps',
   'Këmbë',
@@ -14,7 +16,8 @@ export const MUSCLE_GROUPS = [
   'Parakrah',
 ] as const
 
-export const EXERCISES: Exercise[] = [
+// Ushtrimet bazë (origjinale). Nuk preken kurrë.
+const BASE_EXERCISES: Exercise[] = [
   // Gjoks
   {
     name: 'Bench Press me Shufër',
@@ -220,9 +223,17 @@ export const EXERCISES: Exercise[] = [
     muscle: 'Parakrah',
     instructions: 'Curl me pëllëmbë poshtë për të targetuar pjesën e sipërme të parakrahut.',
   },
-  // FitShqip V2: 200 ushtrime shtesë (20 për secilën kategori), skema e njëjtë.
-  ...V2_EXERCISES,
 ]
+
+// Burimi i vetëm i ushtrimeve: bazë, V2 (200 shtesë) dhe V3 (100 shtesë + 30 Supet).
+// Siguri kundër dublikimeve: nëse një emër përsëritet, mbetet vetëm i pari (asnjë ushtrim ekzistues
+// nuk hiqet dhe asnjë nuk shfaqet dy herë).
+const _seen = new Set<string>()
+export const EXERCISES: Exercise[] = [...BASE_EXERCISES, ...V2_EXERCISES, ...V3_EXERCISES].filter((e) => {
+  if (_seen.has(e.name)) return false
+  _seen.add(e.name)
+  return true
+})
 
 export function getExercise(name: string): Exercise | undefined {
   return EXERCISES.find((e) => e.name === name)

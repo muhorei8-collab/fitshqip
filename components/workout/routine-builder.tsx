@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Minus, Plus, Search, Trash2 } from 'lucide-react'
+import { Info, Minus, Plus, Search, Trash2 } from 'lucide-react'
 import { useApp } from '@/components/app-provider'
 import { Field, Modal, inputClass } from '@/components/shared/ui'
+import { ExerciseDetailModal } from '@/components/shared/exercise-detail-modal'
 import { EXERCISES, MUSCLE_GROUPS } from '@/lib/exercises'
 import { DAYS_SHORT } from '@/lib/supabase/programs'
 import type { RoutineExercise } from '@/lib/types'
@@ -37,6 +38,7 @@ export function RoutineBuilder({
   const [muscle, setMuscle] = useState<string>('Të gjitha')
   const [saving, setSaving] = useState(false)
   const [days, setDays] = useState<number[]>([])
+  const [infoName, setInfoName] = useState<string | null>(null)
 
   // Kur hapet me të dhëna fillestare (ndryshim programi), i mbush fushat.
   useEffect(() => {
@@ -105,6 +107,7 @@ export function RoutineBuilder({
   }
 
   return (
+    <>
     <Modal open={open} onClose={onClose} title={title} size="lg">
       <div className="flex flex-col gap-4">
         <Field label="Emri i rutinës">
@@ -222,11 +225,11 @@ export function RoutineBuilder({
             {filtered.map((e) => {
               const isPicked = picked.some((p) => p.name === e.name)
               return (
+                <div key={e.name} className="flex items-stretch gap-1.5">
                 <button
-                  key={e.name}
                   type="button"
                   onClick={() => togglePick(e.name, e.muscle)}
-                  className={`flex items-center justify-between rounded-xl border px-3 py-2.5 text-left transition-colors ${
+                  className={`flex min-w-0 flex-1 items-center justify-between rounded-xl border px-3 py-2.5 text-left transition-colors ${
                     isPicked ? 'border-primary bg-primary/10' : 'border-border bg-background'
                   }`}
                 >
@@ -242,6 +245,15 @@ export function RoutineBuilder({
                     <Plus className="h-3.5 w-3.5" />
                   </span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setInfoName(e.name)}
+                  className="flex w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground"
+                  aria-label={`Si bëhet: ${e.name}`}
+                >
+                  <Info className="h-4 w-4" />
+                </button>
+                </div>
               )
             })}
           </div>
@@ -257,5 +269,7 @@ export function RoutineBuilder({
         </button>
       </div>
     </Modal>
+    <ExerciseDetailModal name={infoName} onClose={() => setInfoName(null)} />
+    </>
   )
 }

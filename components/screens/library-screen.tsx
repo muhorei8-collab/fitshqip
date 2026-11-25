@@ -1,25 +1,31 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { ChevronDown, Search } from 'lucide-react'
+import { ChevronRight, Search } from 'lucide-react'
 import { ScreenHeader } from '@/components/screens/screen-header'
 import { Card, inputClass } from '@/components/shared/ui'
+import { ExerciseDetailModal } from '@/components/shared/exercise-detail-modal'
 import { EXERCISES, MUSCLE_GROUPS } from '@/lib/exercises'
+import { getExerciseDetail, hasDetail } from '@/lib/exercise-details'
+
+const SUBGROUPS = ['Deltoidi anterior', 'Deltoidi lateral', 'Deltoidi posterior']
 
 export function LibraryScreen() {
   const [search, setSearch] = useState('')
   const [muscle, setMuscle] = useState<string>('Të gjitha')
-  const [open, setOpen] = useState<string | null>(null)
+  const [subgroup, setSubgroup] = useState<string>('Të gjitha')
+  const [selected, setSelected] = useState<string | null>(null)
 
-  const filtered = useMemo(
-    () =>
-      EXERCISES.filter((e) => {
-        const matchMuscle = muscle === 'Të gjitha' || e.muscle === muscle
-        const matchSearch = e.name.toLowerCase().includes(search.toLowerCase())
-        return matchMuscle && matchSearch
-      }),
-    [search, muscle],
-  )
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return EXERCISES.filter((e) => {
+      const matchMuscle = muscle === 'Të gjitha' || e.muscle === muscle
+      const matchSub = muscle !== 'Supet' || subgroup === 'Të gjitha' || e.subgroup === subgroup
+      const sq = getExerciseDetail(e.name)?.sq.toLowerCase() ?? ''
+      const matchSearch = !q || e.name.toLowerCase().includes(q) || sq.includes(q)
+      return matchMuscle && matchSub && matchSearch
+    })
+  }, [search, muscle, subgroup])
 
   return (
     <div className="min-h-dvh pb-28">
@@ -40,7 +46,10 @@ export function LibraryScreen() {
             <button
               key={m}
               type="button"
-              onClick={() => setMuscle(m)}
+              onClick={() => {
+                setMuscle(m)
+                setSubgroup('Të gjitha')
+              }}
               className={`whitespace-nowrap rounded-full border px-3.5 py-1.5 text-sm font-medium ${
                 muscle === m
                   ? 'border-primary bg-primary text-primary-foreground'
@@ -51,6 +60,24 @@ export function LibraryScreen() {
             </button>
           ))}
         </div>
+        {muscle === 'Supet' && (
+          <div className="no-scrollbar -mx-1 mt-2 flex gap-2 overflow-x-auto px-1">
+            {['Të gjitha', ...SUBGROUPS].map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setSubgroup(s)}
+                className={`whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium ${
+                  subgroup === s
+                    ? 'border-primary bg-primary/15 text-primary'
+                    : 'border-border bg-card text-muted-foreground'
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col gap-2.5 px-4 pt-2">
@@ -58,29 +85,33 @@ export function LibraryScreen() {
           <Card key={e.name} className="p-0 overflow-hidden">
             <button
               type="button"
-              onClick={() => setOpen(open === e.name ? null : e.name)}
-              className="flex w-full items-center justify-between p-4 text-left"
+              onClick={() => setSelected(e.name)}
+              className="flex w-full items-center justify-between gap-3 p-4 text-left"
             >
-              <div>
-                <p className="font-semibold">{e.name}</p>
-                <span className="text-xs text-muted-foreground">{e.muscle}</span>
+              <div className="min-w-0">
+                <p className="truncate font-semibold">{e.name}</p>
+                <span className="text-xs text-muted-foreground">
+                  {e.muscle}
+                  {e.subgroup ? ` · ${e.subgroup}` : ''}
+                </span>
               </div>
-              <ChevronDown
-                className={`h-5 w-5 text-muted-foreground transition-transform ${open === e.name ? 'rotate-180' : ''}`}
-              />
+              <span className="flex shrink-0 items-center gap-2">
+                {hasDetail(e.name) && (
+                  <span className="rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold text-success">
+                    Si bëhet
+                  </span>
+                )}
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </span>
             </button>
-            {open === e.name && (
-              <div className="animate-rise border-t border-border p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-success">Si të kryhet</p>
-                <p className="mt-1 text-sm leading-relaxed text-muted-foreground text-pretty">{e.instructions}</p>
-              </div>
-            )}
           </Card>
         ))}
         {filtered.length === 0 && (
           <p className="py-12 text-center text-sm text-muted-foreground">Asnjë ushtrim nuk u gjet.</p>
         )}
       </div>
+
+      <ExerciseDetailModal name={selected} onClose={() => setSelected(null)} />
     </div>
   )
 }
